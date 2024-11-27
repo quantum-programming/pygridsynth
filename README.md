@@ -20,7 +20,7 @@ pip install pygridsynth
 Or, to install from source:
 
 ```bash
-pip install pygridsynth@git+https://github.com/quantum-programming/clifford-T-decomp.git
+pip install git+https://github.com/quantum-programming/pygridsynth.git
 ```
 
 ## Usage
@@ -74,7 +74,7 @@ print(gates)
 
 ## Contributing
 
-Bug reports and feature requests are welcome. Please submit them via the [GitHub repository](https://github.com/quantum-programming/clifford-T-decomp) Issues section. Contributions must comply with the GNU General Public License v3 or later.
+Bug reports and feature requests are welcome. Please submit them via the [GitHub repository](https://github.com/quantum-programming/pygridsynth) Issues section. Contributions must comply with the GNU General Public License v3 or later.
 
 ## License
 
