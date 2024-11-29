@@ -1,6 +1,6 @@
 # pygridsynth
 
-`pygridsynth` is a Python library designed for quantum gate decomposition based on a given angle `θ` and tolerance `ε`. It is particularly useful for solving approximate gate synthesis problems in quantum computing and algorithm research.
+`pygridsynth` is a Python library designed for quantum gate decomposition over Clifford+T gate set based on a given angle `θ` and tolerance `ε`. It is particularly useful for solving approximate gate synthesis problems in quantum computing and algorithm research.
 
 ## Features
 
@@ -30,7 +30,7 @@ pip install git+https://github.com/quantum-programming/pygridsynth.git
 ### Command-Line Example
 
 ```bash
-python -m pygridsynth <theta> <epsilon> [options]
+pygridsynth <theta> <epsilon> [options]
 ```
 
 ### Arguments
@@ -48,7 +48,7 @@ python -m pygridsynth <theta> <epsilon> [options]
 ### Example Execution
 
 ```bash
-python -m pygridsynth 0.5 1e-10 --dps 256 --verbose --time
+pygridsynth 0.5 1e-10 --dps 256 --verbose --time
 ```
 
 This command will:
@@ -68,7 +68,7 @@ mpmath.mp.dps = 128
 theta = mpmath.mpmathify("0.5")
 epsilon = mpmath.mpmathify("1e-10")
 
-gates = gridsynth_gates(theta=theta, epsilon=epsilon, verbose=True)
+gates = gridsynth_gates(theta=theta, epsilon=epsilon)
 print(gates)
 ```
 
