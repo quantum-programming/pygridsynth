@@ -30,7 +30,7 @@ pip install git+https://github.com/quantum-programming/pygridsynth.git
 ### Command-Line Example
 
 ```bash
-pygridsynth <theta> <epsilon> [options]
+python -m pygridsynth <theta> <epsilon> [options]
 ```
 
 ### Arguments
@@ -50,13 +50,13 @@ pygridsynth <theta> <epsilon> [options]
 ### Example Execution
 
 ```bash
-python -m pygridsynth 0.5 1e-10 --dps 256 --verbose --time
+python -m pygridsynth 0.5 1e-50 --dps 256 --verbose --time
 ```
 
 This command will:
-1. Compute the gate decomposition for `θ = 0.5` and `ε = 0.01`.
-2. Set the calculation precision to 256 digits.
-3. Display detailed output and measure execution time.
+1. Compute the Clifford+T gate decomposition of a Z-rotation gate with $\theta = 0.5$ and $\epsilon = 0.01$.
+2. Set the calculation precision to 256 decimal places.
+3. Display detailed output and measure the execution time.
 
 ## Using as a Library
 
