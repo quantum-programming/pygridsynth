@@ -106,7 +106,9 @@ def check(theta, gates):
     print(f"{e=}")
 
 
-def gridsynth(theta, epsilon, verbose=False, measure_time=False, show_graph=False):
+def gridsynth(theta, epsilon,
+              diophantine_timeout=200, factoring_timeout=50,
+              verbose=False, measure_time=False, show_graph=False):
     epsilon_region = EpsilonRegion(theta, epsilon)
     unit_disk = UnitDisk()
     k = 0
@@ -123,8 +125,6 @@ def gridsynth(theta, epsilon, verbose=False, measure_time=False, show_graph=Fals
     time_of_solve_TDGP = 0
     time_of_diophantine_dyadic = 0
     while True:
-        if verbose:
-            print(f"trial {k=}:")
         if measure_time:
             start = time.time()
         sol = solve_TDGP(epsilon_region, unit_disk, *transformed, k,
@@ -134,8 +134,12 @@ def gridsynth(theta, epsilon, verbose=False, measure_time=False, show_graph=Fals
             start = time.time()
 
         for z in sol:
+            if (z * z.conj).residue == 0:
+                continue
             xi = 1 - DRootTwo.fromDOmega(z.conj * z)
-            w = diophantine_dyadic(xi)
+            w = diophantine_dyadic(xi,
+                                   diophantine_timeout=diophantine_timeout,
+                                   factoring_timeout=factoring_timeout)
             if w != NO_SOLUTION:
                 z = z.reduce_denomexp()
                 w = w.reduce_denomexp()
@@ -157,15 +161,17 @@ def gridsynth(theta, epsilon, verbose=False, measure_time=False, show_graph=Fals
                 return u_approx
         if measure_time:
             time_of_diophantine_dyadic += time.time() - start
-        if verbose:
-            print("------------------")
         k += 1
 
 
-def gridsynth_gates(theta, epsilon, verbose=False, measure_time=False, show_graph=False):
+def gridsynth_gates(theta, epsilon,
+                    diophantine_timeout=200, factoring_timeout=50,
+                    verbose=False, measure_time=False, show_graph=False):
     if measure_time:
         start_total = time.time()
     u_approx = gridsynth(theta=theta, epsilon=epsilon,
+                         diophantine_timeout=diophantine_timeout,
+                         factoring_timeout=factoring_timeout,
                          verbose=verbose, measure_time=measure_time, show_graph=show_graph)
     if measure_time:
         start = time.time()

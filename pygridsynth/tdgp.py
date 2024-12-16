@@ -36,7 +36,8 @@ def solve_TDGP(setA, setB, opG, ellipseA_upright, ellipseB_upright, bboxA, bboxB
     sol_transformed = [opG.inv * z for z in sol_sufficient]
     sol = [z for z in sol_transformed if setA.inside(z) and setB.inside(z.conj_sq2)]
 
-    if verbose:
+    if verbose and len(sol_sufficient) > 0:
+        print(f"{k=}")
         print(f"size of sol_sufficient: {len(sol_sufficient)}, size of sol: {len(sol)}")
     if show_graph and len(sol_sufficient) > 0:
         plot_sol([sol_transformed, sol], setA.ellipse, setB.ellipse, None, None,
