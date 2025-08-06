@@ -13,6 +13,7 @@ from .synthesis_of_cliffordT import decompose_domega_unitary
 
 class EpsilonRegion(ConvexSet):
     def __init__(self, theta, epsilon):
+        epsilon = mpmath.mpf(epsilon)
         self._theta = theta
         self._epsilon = epsilon
         self._d = 1 - epsilon ** 2 / 2
