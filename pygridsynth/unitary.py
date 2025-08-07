@@ -2,6 +2,7 @@ from functools import cached_property
 import mpmath
 
 from .ring import DOmega
+from .quantum_gate import HGate, TGate, SGate, SXGate, WGate
 
 
 class DOmegaUnitary():
@@ -113,14 +114,16 @@ class DOmegaUnitary():
     def from_gates(cls, gates):
         unitary = cls.identity()
         for g in reversed(gates):
-            if g == "H":
+            if isinstance(g, HGate):
                 unitary = unitary.renew_denomexp(unitary.k + 1).mul_by_H_from_left()
-            elif g == "T":
+            elif isinstance(g, TGate):
                 unitary = unitary.mul_by_T_from_left()
-            elif g == "S":
+            elif isinstance(g, SGate):
                 unitary = unitary.mul_by_S_from_left()
-            elif g == "X":
+            elif isinstance(g, SXGate):
                 unitary = unitary.mul_by_X_from_left()
-            elif g == "W":
+            elif isinstance(g, WGate):
                 unitary = unitary.mul_by_W_from_left()
+            else:
+                raise ValueError
         return unitary.reduce_denomexp()

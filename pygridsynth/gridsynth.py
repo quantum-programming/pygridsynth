@@ -9,20 +9,21 @@ from .tdgp import solve_TDGP
 from .diophantine import NO_SOLUTION, diophantine_dyadic
 from .unitary import DOmegaUnitary
 from .synthesis_of_cliffordT import decompose_domega_unitary
+from .quantum_gate import Rz
 
 
 class EpsilonRegion(ConvexSet):
     def __init__(self, theta, epsilon):
         self._theta = theta
         self._epsilon = epsilon
-        self._d = 1 - epsilon ** 2 / 2
+        self._d = sqrt(1 - epsilon ** 2 / 4)
         self._z_x = mpmath.cos(-theta / 2)
         self._z_y = mpmath.sin(-theta / 2)
         D_1 = mpmath.matrix([[self._z_x, -self._z_y], [self._z_y, self._z_x]])
-        D_2 = mpmath.matrix([[4 * (1 / epsilon) ** 4, 0], [0, (1 / epsilon) ** 2]])
+        D_2 = mpmath.matrix([[64 * (1 / epsilon) ** 4, 0], [0, 4 * (1 / epsilon) ** 2]])
         D_3 = mpmath.matrix([[self._z_x, self._z_y], [-self._z_y, self._z_x]])
         p = mpmath.matrix([self._d * self._z_x, self._d * self._z_y])
-        ellipse = Ellipse(D_1 * D_2 * D_3, p)
+        ellipse = Ellipse(D_1 @ D_2 @ D_3, p)
         super().__init__(ellipse)
 
     @property
@@ -79,36 +80,28 @@ def generate_complex_unitary(sol):
                           [t.to_complex, u.conj.to_complex]])
 
 
-def generate_target_Rz(theta):
-    return mpmath.matrix([[mpmath.exp(- 1.j * theta / 2), 0],
-                          [0, mpmath.exp(1.j * theta / 2)]])
-
-
 def error(theta, gates):
-    Rz = generate_target_Rz(theta)
-    U = DOmegaUnitary.from_gates(gates).to_complex_matrix
-    E = U - Rz
-    return sqrt(mpmath.fabs(E[0, 0] * E[1, 1] - E[0, 1] * E[1, 0]))
+    u_target = Rz(theta)
+    u_approx = DOmegaUnitary.from_gates(gates).to_complex_matrix
+    return 2 * sqrt(mpmath.re(1 - mpmath.re(mpmath.conj(u_target[0, 0]) * u_approx[0, 0]) ** 2))
 
 
 def check(theta, gates):
-    t_count = gates.count("T")
-    h_count = gates.count("H")
-    U_decomp = DOmegaUnitary.from_gates(gates)
-    # Rz = generate_target_Rz(theta)
-    # U = U_decomp.to_complex_matrix
+    # t_count = gates.count("T")
+    # h_count = gates.count("H")
+    u_approx = DOmegaUnitary.from_gates(gates)
     e = error(theta, gates)
     print(f"{gates=}")
-    print(f"{t_count=}, {h_count=}")
-    # print(f"{Rz=}")
-    print(f"U_decomp={U_decomp.to_matrix}")
-    # print(f"{U=}")
+    # print(f"{t_count=}, {h_count=}")
+    print(f"u_approx={u_approx.to_matrix}")
     print(f"{e=}")
 
 
 def gridsynth(theta, epsilon,
               diophantine_timeout=200, factoring_timeout=50,
               verbose=False, measure_time=False, show_graph=False):
+    theta = mpmath.mpmathify(theta)
+    epsilon = mpmath.mpmathify(epsilon)
     epsilon_region = EpsilonRegion(theta, epsilon)
     unit_disk = UnitDisk()
     k = 0
@@ -132,7 +125,6 @@ def gridsynth(theta, epsilon,
         if measure_time:
             time_of_solve_TDGP += time.time() - start
             start = time.time()
-
         for z in sol:
             if (z * z.conj).residue == 0:
                 continue
@@ -164,9 +156,12 @@ def gridsynth(theta, epsilon,
         k += 1
 
 
-def gridsynth_gates(theta, epsilon,
+def gridsynth_gates(theta, epsilon, wires=[0],
+                    decompose_phase_gate=True,
                     diophantine_timeout=200, factoring_timeout=50,
                     verbose=False, measure_time=False, show_graph=False):
+    theta = mpmath.mpmathify(theta)
+    epsilon = mpmath.mpmathify(epsilon)
     if measure_time:
         start_total = time.time()
     u_approx = gridsynth(theta=theta, epsilon=epsilon,
@@ -175,8 +170,10 @@ def gridsynth_gates(theta, epsilon,
                          verbose=verbose, measure_time=measure_time, show_graph=show_graph)
     if measure_time:
         start = time.time()
-    gates = decompose_domega_unitary(u_approx)
+    circuit = decompose_domega_unitary(u_approx, wires=wires, decompose_phase_gate=decompose_phase_gate)
+    
     if measure_time:
         print(f"time of decompose_domega_unitary: {(time.time() - start) * 1000} ms")
         print(f"total time: {(time.time() - start_total) * 1000} ms")
-    return gates
+
+    return circuit

@@ -102,7 +102,7 @@ def _to_upright_ellipse_pair(ellipseA, ellipseB, verbose=False):
     return opG_l * opG_r
 
 
-def to_upright_set_pair(setA, setB, show_graph, verbose=False):
+def to_upright_set_pair(setA, setB, show_graph=False, verbose=False):
     opG = _to_upright_ellipse_pair(setA.ellipse, setB.ellipse, verbose=verbose)
     ellipse_pair = opG * EllipsePair(setA.ellipse, setB.ellipse)
     ellipseA_upright = ellipse_pair.A
