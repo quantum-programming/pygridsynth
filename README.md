@@ -23,9 +23,35 @@ Or, to install from source:
 pip install git+https://github.com/quantum-programming/pygridsynth.git
 ```
 
+### Install executable
+
+You can optionally install an executable script called `pygridsynth` with
+
+```bash
+pip install .
+```
+
+Or, to install in development (editable) mode
+
+```bash
+pip install -e .
+```
+
+The versions of `pygridsynth` available on pypi do not yet support
+installing an executable in this way.
+
+Once you have installed this executable, you can use `pygridsynth` like this
+
+```sh
+shell> pygridsynth <theta> <epsilon> [options]
+```
+
+or `pygridsynth --help` for brief information on calling the script.
+
 ## Usage
 
-`pygridsynth` can be used as a command-line tool.
+`pygridsynth` can be used as a command-line tool even if you have not installed the
+executable.
 
 ### Command-Line Example
 
