@@ -23,6 +23,8 @@ def main():
     epsilon = mpmath.mpmathify(args.epsilon)
 
     gates = gridsynth_gates(theta=theta, epsilon=epsilon,
+                            factoring_timeout=args.ftimeout,
+                            diophantine_timeout=args.dtimeout,
                             verbose=args.verbose, measure_time=args.time,
                             show_graph=args.showgraph)
     print(gates)
