@@ -93,8 +93,9 @@ This command will:
 You can also use `pygridsynth` directly in your scripts:
 
 ```python
-from pygridsynth.gridsynth import gridsynth_gates
 import mpmath
+
+from pygridsynth.gridsynth import gridsynth_gates
 
 mpmath.mp.dps = 128
 theta = mpmath.mpmathify("0.5")
