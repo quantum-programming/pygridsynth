@@ -110,9 +110,16 @@ def check(theta, gates):
     # print(f"{U=}")
     print(f"{e=}")
 
+def synthesized_unitary(gates):
+    tcount = gates.count("T")
+    epsilon = 2 ** (-tcount//3)
+    dps = _dps_for_epsilon(epsilon)
+    with mp_dps(dps):    
+        return DOmegaUnitary.from_gates(gates).to_complex_matrix
+
 
 def gridsynth(theta:mpmath.mpf, epsilon:mpmath.mpf,
-              diophantine_timeout=200, factoring_timeout=50,
+              diophantine_timeout=1, factoring_timeout=1,
               verbose=False, measure_time=False, show_graph=False):
     dps = _dps_for_epsilon(epsilon)
     if not isinstance(epsilon, mpmath.mpf) or not isinstance(theta, mpmath.mpf):
@@ -179,7 +186,7 @@ def gridsynth(theta:mpmath.mpf, epsilon:mpmath.mpf,
 
 
 def gridsynth_gates(theta, epsilon,
-                    diophantine_timeout=200, factoring_timeout=50,
+                    diophantine_timeout=1, factoring_timeout=1,
                     verbose=False, measure_time=False, show_graph=False):
     dps = _dps_for_epsilon(epsilon)
     with mp_dps(dps):
@@ -205,7 +212,7 @@ def _dps_for_epsilon(eps_float) -> int:
     try:
         e = mpmath.mpmathify(f"{eps_float}")
         k = -mpmath.log10(e)
-        return 15 + 2.5*int(mpmath.ceil(k)) 
+        return 15 + 2.5*int(mpmath.ceil(k)) # used in newsynth
     finally:
         mpmath.mp.dps = old
 
