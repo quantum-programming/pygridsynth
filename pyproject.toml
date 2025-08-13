@@ -14,6 +14,8 @@ classifiers = [
 
 dependencies = [
     "mpmath",
+    "setuptools",
+    "matplotlib",
 ]
 
 [project.optional-dependencies]
