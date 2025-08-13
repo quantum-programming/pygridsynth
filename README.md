@@ -66,7 +66,8 @@ python -m pygridsynth <theta> <epsilon> [options]
 
 ### Options
 
-- `--dps`: Sets the calculation precision (default: `128`).
+- `--dps`: Sets the working precision of the calculation. If `--dps` is not given, then the working precision will
+           be calculated from `epsilon`.
 - `--dtimeout`, `-dt`: Sets the timeout for solving diophantine equations in milliseconds (default: `200`).
 - `--ftimeout`, `-ft`: Sets the timeout for factorization in milliseconds (default: `50`).
 - `--verbose`, `-v`: Enables detailed output.
@@ -76,7 +77,7 @@ python -m pygridsynth <theta> <epsilon> [options]
 ### Example Execution
 
 ```bash
-python -m pygridsynth 0.5 1e-50 --dps 256 --verbose --time
+python -m pygridsynth 0.5 1e-50 --verbose --time
 ```
 
 This command will:
