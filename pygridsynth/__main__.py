@@ -18,15 +18,16 @@ def main():
     parser.add_argument("--showgraph", "-g", action="store_true")
 
     args = parser.parse_args()
-    epsilon1 = mpmath.mpmathify(args.epsilon)
-    dps_of_result = -mpmath.log10(epsilon1)
+
     # Use the same heuristic as Haskell gridsynth for setting dps
     if args.dps is None:
+        epsilon1 = mpmath.mpmathify(args.epsilon)
+        dps_of_result = -mpmath.log10(epsilon1)
         args.dps = 15 + 2.5 * dps_of_result
     mpmath.mp.dps = args.dps
-    epsilon = mpmath.mpmathify(f"{args.epsilon}")
+    epsilon = mpmath.mpmathify(args.epsilon)
     mpmath.mp.pretty = True
-    theta = mpmath.mpmathify(f"{args.theta}")
+    theta = mpmath.mpmathify(args.theta)
 
     gates = gridsynth_gates(
         theta=theta,
