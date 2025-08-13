@@ -29,6 +29,7 @@
         "prec",
         "pygridsynth",
         "pytest",
+        "PYTHONPATH",
         "rounddiv",
         "selfassociate",
         "selfcoprime",
