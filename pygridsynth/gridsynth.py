@@ -85,10 +85,15 @@ def generate_target_Rz(theta):
 
 
 def error(theta, gates):
-    Rz = generate_target_Rz(theta)
-    U = DOmegaUnitary.from_gates(gates).to_complex_matrix
-    E = U - Rz
-    return sqrt(mpmath.fabs(E[0, 0] * E[1, 1] - E[0, 1] * E[1, 0]))
+    tcount = gates.count("T")
+    epsilon = 2 ** (-tcount//3)
+    dps = _dps_for_epsilon(epsilon)
+    with mp_dps(dps):
+
+        Rz = generate_target_Rz(mpmath.mpmathify(f"{theta}"))
+        U = DOmegaUnitary.from_gates(gates).to_complex_matrix
+        E = U - Rz
+        return sqrt(mpmath.fabs(E[0, 0] * E[1, 1] - E[0, 1] * E[1, 0]))
 
 
 def check(theta, gates):
@@ -106,77 +111,110 @@ def check(theta, gates):
     print(f"{e=}")
 
 
-def gridsynth(theta, epsilon,
+def gridsynth(theta:mpmath.mpf, epsilon:mpmath.mpf,
               diophantine_timeout=200, factoring_timeout=50,
               verbose=False, measure_time=False, show_graph=False):
-    epsilon_region = EpsilonRegion(theta, epsilon)
-    unit_disk = UnitDisk()
-    k = 0
+    dps = _dps_for_epsilon(epsilon)
+    if not isinstance(epsilon, mpmath.mpf) or not isinstance(theta, mpmath.mpf):
+        
+        mpmath.mp.dps = dps
+        epsilon = mpmath.mpmathify(f"{epsilon}")
+        theta = mpmath.mpmathify(f"{theta}")
 
-    if measure_time:
-        start = time.time()
-    transformed = to_upright_set_pair(epsilon_region, unit_disk,
-                                      verbose=verbose, show_graph=show_graph)
-    if measure_time:
-        print(f"to_upright_set_pair: {time.time() - start} s")
-    if verbose:
-        print("------------------")
+    with mp_dps(dps):
+        epsilon_region = EpsilonRegion(theta, epsilon)
+        unit_disk = UnitDisk()
+        k = 0
+        
 
-    time_of_solve_TDGP = 0
-    time_of_diophantine_dyadic = 0
-    while True:
         if measure_time:
             start = time.time()
-        sol = solve_TDGP(epsilon_region, unit_disk, *transformed, k,
-                         verbose=verbose, show_graph=show_graph)
+        transformed = to_upright_set_pair(epsilon_region, unit_disk,
+                                        verbose=verbose, show_graph=show_graph)
         if measure_time:
-            time_of_solve_TDGP += time.time() - start
-            start = time.time()
+            print(f"to_upright_set_pair: {time.time() - start} s")
+        if verbose:
+            print("------------------")
 
-        for z in sol:
-            if (z * z.conj).residue == 0:
-                continue
-            xi = 1 - DRootTwo.fromDOmega(z.conj * z)
-            w = diophantine_dyadic(xi,
-                                   diophantine_timeout=diophantine_timeout,
-                                   factoring_timeout=factoring_timeout)
-            if w != NO_SOLUTION:
-                z = z.reduce_denomexp()
-                w = w.reduce_denomexp()
-                if z.k > w.k:
-                    w = w.renew_denomexp(z.k)
-                elif z.k < w.k:
-                    z = z.renew_denomexp(w.k)
-                if (z + w).reduce_denomexp().k < z.k:
-                    u_approx = DOmegaUnitary(z, w, 0)
-                else:
-                    u_approx = DOmegaUnitary(z, w.mul_by_omega(), 0)
-                if measure_time:
-                    time_of_diophantine_dyadic += time.time() - start
-                    print(f"time of solve_TDGP: {time_of_solve_TDGP * 1000} ms")
-                    print(f"time of diophantine_dyadic: {time_of_diophantine_dyadic * 1000} ms")
-                if verbose:
-                    print(f"{z=}, {w=}")
-                    print("------------------")
-                return u_approx
-        if measure_time:
-            time_of_diophantine_dyadic += time.time() - start
-        k += 1
+        time_of_solve_TDGP = 0
+        time_of_diophantine_dyadic = 0
+        while True:
+            if measure_time:
+                start = time.time()
+            sol = solve_TDGP(epsilon_region, unit_disk, *transformed, k,
+                            verbose=verbose, show_graph=show_graph)
+            if measure_time:
+                time_of_solve_TDGP += time.time() - start
+                start = time.time()
+
+            for z in sol:
+                if (z * z.conj).residue == 0:
+                    continue
+                xi = 1 - DRootTwo.fromDOmega(z.conj * z)
+                w = diophantine_dyadic(xi,
+                                    diophantine_timeout=diophantine_timeout,
+                                    factoring_timeout=factoring_timeout)
+                if w != NO_SOLUTION:
+                    z = z.reduce_denomexp()
+                    w = w.reduce_denomexp()
+                    if z.k > w.k:
+                        w = w.renew_denomexp(z.k)
+                    elif z.k < w.k:
+                        z = z.renew_denomexp(w.k)
+                    if (z + w).reduce_denomexp().k < z.k:
+                        u_approx = DOmegaUnitary(z, w, 0)
+                    else:
+                        u_approx = DOmegaUnitary(z, w.mul_by_omega(), 0)
+                    if measure_time:
+                        time_of_diophantine_dyadic += time.time() - start
+                        print(f"time of solve_TDGP: {time_of_solve_TDGP * 1000} ms")
+                        print(f"time of diophantine_dyadic: {time_of_diophantine_dyadic * 1000} ms")
+                    if verbose:
+                        print(f"{z=}, {w=}")
+                        print("------------------")
+                    return u_approx
+            if measure_time:
+                time_of_diophantine_dyadic += time.time() - start
+            k += 1
 
 
 def gridsynth_gates(theta, epsilon,
                     diophantine_timeout=200, factoring_timeout=50,
                     verbose=False, measure_time=False, show_graph=False):
-    if measure_time:
-        start_total = time.time()
-    u_approx = gridsynth(theta=theta, epsilon=epsilon,
-                         diophantine_timeout=diophantine_timeout,
-                         factoring_timeout=factoring_timeout,
-                         verbose=verbose, measure_time=measure_time, show_graph=show_graph)
-    if measure_time:
-        start = time.time()
-    gates = decompose_domega_unitary(u_approx)
-    if measure_time:
-        print(f"time of decompose_domega_unitary: {(time.time() - start) * 1000} ms")
-        print(f"total time: {(time.time() - start_total) * 1000} ms")
-    return gates
+    dps = _dps_for_epsilon(epsilon)
+    with mp_dps(dps):
+        theta = mpmath.mpmathify(f"{theta}")
+        epsilon = mpmath.mpmathify(f"{epsilon}")
+
+        if measure_time:
+            start_total = time.time()
+        u_approx = gridsynth(theta=theta, epsilon=epsilon,
+                            diophantine_timeout=diophantine_timeout,
+                            factoring_timeout=factoring_timeout,
+                            verbose=verbose, measure_time=measure_time, show_graph=show_graph)
+        if measure_time:
+            start = time.time()
+        gates = decompose_domega_unitary(u_approx)
+        if measure_time:
+            print(f"time of decompose_domega_unitary: {(time.time() - start) * 1000} ms")
+            print(f"total time: {(time.time() - start_total) * 1000} ms")
+        return gates
+
+def _dps_for_epsilon(eps_float) -> int:
+    old = mpmath.mp.dps
+    try:
+        e = mpmath.mpmathify(f"{eps_float}")
+        k = -mpmath.log10(e)
+        return 15 + 2.5*int(mpmath.ceil(k)) 
+    finally:
+        mpmath.mp.dps = old
+
+class mp_dps:
+    def __init__(self, dps):
+        self._old = None
+        self._dps = dps
+    def __enter__(self):
+        self._old = mpmath.mp.dps
+        mpmath.mp.dps = self._dps
+    def __exit__(self, *exc):
+        mpmath.mp.dps = self._old
