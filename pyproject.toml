@@ -16,6 +16,15 @@ dependencies = [
     "mpmath",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "flake8",
+    "mypy",
+    "black",
+    "isort"
+]
+
 [tool.setuptools]
 packages = ["pygridsynth"]
 

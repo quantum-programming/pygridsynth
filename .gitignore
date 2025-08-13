@@ -1,4 +1,7 @@
 **/__pycache__/**
-build/
-.venv/
 pygridsynth.egg-info/
+
+build/
+
+.venv/
+uv.lock
