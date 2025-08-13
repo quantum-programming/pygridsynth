@@ -110,7 +110,7 @@ def check(theta, gates):
     # print(f"{U=}")
     print(f"{e=}")
 
-def synthesized_unitary(gates):
+def get_synthesized_unitary(gates):
     tcount = gates.count("T")
     epsilon = 2 ** (-tcount//3)
     dps = _dps_for_epsilon(epsilon)
@@ -119,7 +119,7 @@ def synthesized_unitary(gates):
 
 
 def gridsynth(theta:mpmath.mpf, epsilon:mpmath.mpf,
-              diophantine_timeout=1, factoring_timeout=1,
+              diophantine_timeout=1.0, factoring_timeout=1.0,
               verbose=False, measure_time=False, show_graph=False):
     dps = _dps_for_epsilon(epsilon)
     if not isinstance(epsilon, mpmath.mpf) or not isinstance(theta, mpmath.mpf):
@@ -186,7 +186,7 @@ def gridsynth(theta:mpmath.mpf, epsilon:mpmath.mpf,
 
 
 def gridsynth_gates(theta, epsilon,
-                    diophantine_timeout=1, factoring_timeout=1,
+                    diophantine_timeout= 1.0, factoring_timeout= 1.0,
                     verbose=False, measure_time=False, show_graph=False):
     dps = _dps_for_epsilon(epsilon)
     with mp_dps(dps):
