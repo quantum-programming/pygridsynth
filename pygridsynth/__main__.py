@@ -3,16 +3,26 @@ import argparse
 import mpmath
 
 from .gridsynth import gridsynth_gates
+from .loop_controller import LoopController
 
 
 def main():
     parser = argparse.ArgumentParser()
 
+    helps = {
+        "dt": "Diophantine algorithm timeout in milliseconds",
+        "ft": "Factoring algorithm timeout in milliseconds",
+        "dl": "Diophantine algorithm max loop count",
+        "fl": "Factoring algorithm max loop count",
+    }
+
     parser.add_argument("theta", type=str)
     parser.add_argument("epsilon", type=str)
     parser.add_argument("--dps", type=int, default=None)
-    parser.add_argument("--dtimeout", "-dt", type=int, default=200)
-    parser.add_argument("--ftimeout", "-ft", type=int, default=50)
+    parser.add_argument("--dtimeout", "-dt", type=float, default=None, help=helps["dt"])
+    parser.add_argument("--ftimeout", "-ft", type=float, default=None, help=helps["ft"])
+    parser.add_argument("--dloop", "-dl", type=int, default=2000, help=helps["dl"])
+    parser.add_argument("--floop", "-fl", type=int, default=500, help=helps["fl"])
     parser.add_argument("--verbose", "-v", action="store_true")
     parser.add_argument("--time", "-t", action="store_true")
     parser.add_argument("--showgraph", "-g", action="store_true")
@@ -29,11 +39,16 @@ def main():
     mpmath.mp.pretty = True
     theta = mpmath.mpmathify(args.theta)
 
+    loop_controller = LoopController(
+        dloop=args.dloop,
+        floop=args.floop,
+        dtimeout=args.dtimeout,
+        ftimeout=args.ftimeout,
+    )
     gates = gridsynth_gates(
         theta=theta,
         epsilon=epsilon,
-        factoring_timeout=args.ftimeout,
-        diophantine_timeout=args.dtimeout,
+        loop_controller=loop_controller,
         verbose=args.verbose,
         measure_time=args.time,
         show_graph=args.showgraph,

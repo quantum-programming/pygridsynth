@@ -3,6 +3,7 @@ import time
 import mpmath
 
 from .diophantine import NO_SOLUTION, diophantine_dyadic
+from .loop_controller import LoopController
 from .mymath import solve_quadratic, sqrt
 from .region import ConvexSet, Ellipse
 from .ring import DRootTwo
@@ -112,12 +113,14 @@ def check(theta, gates):
 def gridsynth(
     theta,
     epsilon,
-    diophantine_timeout=200,
-    factoring_timeout=50,
+    loop_controller=None,
     verbose=False,
     measure_time=False,
     show_graph=False,
 ):
+    if loop_controller is None:
+        loop_controller = LoopController()
+
     epsilon_region = EpsilonRegion(theta, epsilon)
     unit_disk = UnitDisk()
     k = 0
@@ -152,11 +155,7 @@ def gridsynth(
             if (z * z.conj).residue == 0:
                 continue
             xi = 1 - DRootTwo.fromDOmega(z.conj * z)
-            w = diophantine_dyadic(
-                xi,
-                diophantine_timeout=diophantine_timeout,
-                factoring_timeout=factoring_timeout,
-            )
+            w = diophantine_dyadic(xi, loop_controller=loop_controller)
             if w != NO_SOLUTION:
                 z = z.reduce_denomexp()
                 w = w.reduce_denomexp()
@@ -187,8 +186,7 @@ def gridsynth(
 def gridsynth_gates(
     theta,
     epsilon,
-    diophantine_timeout=200,
-    factoring_timeout=50,
+    loop_controller=None,
     verbose=False,
     measure_time=False,
     show_graph=False,
@@ -197,8 +195,7 @@ def gridsynth_gates(
     u_approx = gridsynth(
         theta=theta,
         epsilon=epsilon,
-        diophantine_timeout=diophantine_timeout,
-        factoring_timeout=factoring_timeout,
+        loop_controller=loop_controller,
         verbose=verbose,
         measure_time=measure_time,
         show_graph=show_graph,
