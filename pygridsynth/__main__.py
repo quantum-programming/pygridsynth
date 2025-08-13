@@ -23,9 +23,9 @@ def main():
     if args.dps is None:
         args.dps = 15 + 2.5 * dps_of_result
     mpmath.mp.dps = args.dps
-    epsilon = mpmath.mpmathify(args.epsilon)
+    epsilon = mpmath.mpmathify(f"{args.epsilon}")
     mpmath.mp.pretty = True
-    theta = mpmath.mpmathify(args.theta)
+    theta = mpmath.mpmathify(f"{args.theta}")
 
     gates = gridsynth_gates(theta=theta, epsilon=epsilon,
                             verbose=args.verbose, measure_time=args.time,
