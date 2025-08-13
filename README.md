@@ -76,11 +76,11 @@ print(gates)
 
 ## Contributing
 
-Bug reports and feature requests are welcome. Please submit them via the [GitHub repository](https://github.com/quantum-programming/pygridsynth) Issues section. Contributions must comply with the GNU General Public License v3 or later.
+Bug reports and feature requests are welcome. Please submit them via the [GitHub repository](https://github.com/quantum-programming/pygridsynth) Issues section. Contributions must comply with the MIT License.
 
 ## License
 
-This project is licensed under the GNU General Public License v3 or later.
+This project is licensed under the MIT License.
 
 ## References
 
