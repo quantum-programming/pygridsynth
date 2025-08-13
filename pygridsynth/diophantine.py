@@ -9,7 +9,12 @@ from .ring import DOmega, ZOmega, ZRootTwo
 
 NO_SOLUTION = "no solution"
 
-rng = random.Random(42)
+rng = random.Random(0)
+
+
+def set_random_seed(seed):
+    global rng
+    rng = random.Random(seed)
 
 
 def _find_factor(n, loop_controller: LoopController, M=128):
