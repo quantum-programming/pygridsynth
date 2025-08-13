@@ -36,3 +36,16 @@ pygridsynth = "pygridsynth:main"
 [project.urls]
 "Homepage" = "https://github.com/quantum-programming/pygridsynth"
 "Bug Tracker" = "https://github.com/quantum-programming/pygridsynth/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=3.5.0",
+    "pytest>=8.3.5",
+]
