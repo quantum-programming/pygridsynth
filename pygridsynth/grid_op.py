@@ -74,8 +74,10 @@ class GridOp:
 
     def __str__(self):
         return (
-            f"[[{self.d0}{self.c0 - self.a0:+}/√2, {self.d1}{self.c1 - self.a1:+}/√2],\n"
-            f" [{self.b0}{self.c0 + self.a0:+}/√2, {self.b1}{self.c1 + self.a1:+}/√2]]"
+            f"[[{self.d0}{self.c0 - self.a0:+}/√2,"
+            f" {self.d1}{self.c1 - self.a1:+}/√2],\n"
+            f" [{self.b0}{self.c0 + self.a0:+}/√2,"
+            f" {self.b1}{self.c1 + self.a1:+}/√2]]"
         )
 
     @cached_property

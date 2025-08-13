@@ -173,7 +173,8 @@ def gridsynth(
                     time_of_diophantine_dyadic += time.time() - start
                     print(f"time of solve_TDGP: {time_of_solve_TDGP * 1000} ms")
                     print(
-                        f"time of diophantine_dyadic: {time_of_diophantine_dyadic * 1000} ms"
+                        "time of diophantine_dyadic: "
+                        f"{time_of_diophantine_dyadic * 1000} ms"
                     )
                 if verbose:
                     print(f"{z=}, {w=}")
