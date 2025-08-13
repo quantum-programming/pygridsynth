@@ -91,6 +91,7 @@ class F_p2:
             if other < 0:
                 return NotImplemented
             else:
+                other = int(other)
                 new = self.__class__(1, 0)
                 tmp = self
                 while other > 0:

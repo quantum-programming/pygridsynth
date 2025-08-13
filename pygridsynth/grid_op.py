@@ -148,6 +148,8 @@ class GridOp:
     def __pow__(self, other):
         if isinstance(other, int):
             if other < 0:
+                # Exp requires that the operator is special.
+                assert self.inv is not None
                 return self.inv ** (-other)
 
             new = self.__class__(ZOmega(0, 0, 0, 1), ZOmega(0, 1, 0, 0))

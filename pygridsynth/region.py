@@ -1,6 +1,7 @@
 import numbers
 from abc import ABC, abstractmethod
 from functools import cached_property
+from typing import Optional, Tuple
 
 import mpmath
 
@@ -247,7 +248,7 @@ class ConvexSet(ABC):
         self._ellipse = ellipse
 
     @abstractmethod
-    def inside(self, u):
+    def inside(self, u) -> bool:
         pass
 
     @property
@@ -255,5 +256,5 @@ class ConvexSet(ABC):
         return self._ellipse
 
     @abstractmethod
-    def intersect(self, u, v):
+    def intersect(self, u0, v) -> Optional[Tuple[float, float]]:
         pass

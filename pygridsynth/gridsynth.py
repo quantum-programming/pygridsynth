@@ -122,8 +122,7 @@ def gridsynth(
     unit_disk = UnitDisk()
     k = 0
 
-    if measure_time:
-        start = time.time()
+    start = time.time() if measure_time else 0.0
     transformed = to_upright_set_pair(
         epsilon_region, unit_disk, verbose=verbose, show_graph=show_graph
     )
@@ -194,8 +193,7 @@ def gridsynth_gates(
     measure_time=False,
     show_graph=False,
 ):
-    if measure_time:
-        start_total = time.time()
+    start_total = time.time() if measure_time else 0.0
     u_approx = gridsynth(
         theta=theta,
         epsilon=epsilon,
@@ -205,8 +203,8 @@ def gridsynth_gates(
         measure_time=measure_time,
         show_graph=show_graph,
     )
-    if measure_time:
-        start = time.time()
+
+    start = time.time() if measure_time else 0.0
     gates = decompose_domega_unitary(u_approx)
     if measure_time:
         print(f"time of decompose_domega_unitary: {(time.time() - start) * 1000} ms")
