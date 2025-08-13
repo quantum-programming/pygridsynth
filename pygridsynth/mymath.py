@@ -1,5 +1,6 @@
-import mpmath
 from itertools import accumulate
+
+import mpmath
 
 
 def SQRT2():
@@ -45,7 +46,7 @@ def floorsqrt(x):
 
 
 def rounddiv(x, y):
-    return (x + y // 2) // y if y > 0 else (x - (- y) // 2) // y
+    return (x + y // 2) // y if y > 0 else (x - (-y) // 2) // y
 
 
 def pow_sqrt2(k):
@@ -76,11 +77,11 @@ def floorlog(x, y):
 def solve_quadratic(a, b, c):
     if a < 0:
         a, b, c = -a, -b, -c
-    discriminant = b ** 2 - 4 * a * c
+    discriminant = b**2 - 4 * a * c
     if discriminant < 0:
         return None
-    s1 = - b - sqrt(discriminant)
-    s2 = - b + sqrt(discriminant)
+    s1 = -b - sqrt(discriminant)
+    s2 = -b + sqrt(discriminant)
     if b >= 0:
         return (s1 / (2 * a), s2 / (2 * a))
     else:

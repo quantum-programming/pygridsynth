@@ -1,16 +1,28 @@
-from .ring import DRootTwo, DOmega
-from .region import Interval
-from .odgp import solve_scaled_ODGP, solve_scaled_ODGP_with_parity
 from .myplot import plot_sol
+from .odgp import solve_scaled_ODGP, solve_scaled_ODGP_with_parity
+from .region import Interval
+from .ring import DOmega, DRootTwo
 
 
-def solve_TDGP(setA, setB, opG, ellipseA_upright, ellipseB_upright, bboxA, bboxB, k,
-               verbose=False, show_graph=False):
+def solve_TDGP(
+    setA,
+    setB,
+    opG,
+    ellipseA_upright,
+    ellipseB_upright,
+    bboxA,
+    bboxB,
+    k,
+    verbose=False,
+    show_graph=False,
+):
     sol_sufficient = []
     sol_x = solve_scaled_ODGP(bboxA.I_x, bboxB.I_x, k + 1)
-    sol_y = solve_scaled_ODGP(bboxA.I_y.fatten(bboxA.I_y.width * 1e-4),
-                              bboxB.I_y.fatten(bboxB.I_y.width * 1e-4),
-                              k + 1)
+    sol_y = solve_scaled_ODGP(
+        bboxA.I_y.fatten(bboxA.I_y.width * 1e-4),
+        bboxB.I_y.fatten(bboxB.I_y.width * 1e-4),
+        k + 1,
+    )
     if len(sol_x) <= 0 or len(sol_y) <= 0:
         sol_sufficient = []
     else:
@@ -40,7 +52,14 @@ def solve_TDGP(setA, setB, opG, ellipseA_upright, ellipseB_upright, bboxA, bboxB
         print(f"{k=}")
         print(f"size of sol_sufficient: {len(sol_sufficient)}, size of sol: {len(sol)}")
     if show_graph and len(sol_sufficient) > 0:
-        plot_sol([sol_transformed, sol], setA.ellipse, setB.ellipse, None, None,
-                 color_list=['limegreen', 'blue'], size_list=[5, 10])
+        plot_sol(
+            [sol_transformed, sol],
+            setA.ellipse,
+            setB.ellipse,
+            None,
+            None,
+            color_list=["limegreen", "blue"],
+            size_list=[5, 10],
+        )
 
     return sol

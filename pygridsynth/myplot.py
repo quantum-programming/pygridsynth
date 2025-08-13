@@ -1,20 +1,26 @@
-
-def plot_sol(sol_list, ellipseA, ellipseB, bboxA=None, bboxB=None,
-             color_list=None, size_list=None):
+def plot_sol(
+    sol_list,
+    ellipseA,
+    ellipseB,
+    bboxA=None,
+    bboxB=None,
+    color_list=None,
+    size_list=None,
+):
     import matplotlib.pyplot as plt
 
     if color_list is None:
-        color_list = plt.rcParams['axes.prop_cycle'].by_key()['color']
+        color_list = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     if size_list is None:
         size_list = [5] * len(sol_list)
 
     fig = plt.figure(figsize=(12, 6))
     ax1 = fig.add_subplot(1, 2, 1)
-    ax1.set_aspect('equal')
+    ax1.set_aspect("equal")
     ax1.set_xlabel(r"$\mathrm{Re}[u]$")
     ax1.set_ylabel(r"$\mathrm{Im}[u]$")
     ax2 = fig.add_subplot(1, 2, 2)
-    ax2.set_aspect('equal')
+    ax2.set_aspect("equal")
     ax2.set_xlabel(r"$\mathrm{Re}[u^\bullet]$")
     ax2.set_ylabel(r"$\mathrm{Im}[u^\bullet]$")
 

@@ -1,10 +1,10 @@
-import warnings
-import numbers
 import math
+import numbers
 import random
 import time
+import warnings
 
-from .ring import ZRootTwo, ZOmega, DOmega
+from .ring import DOmega, ZOmega, ZRootTwo
 
 NO_SOLUTION = "no solution"
 
@@ -55,7 +55,7 @@ def _sqrt_negative_one(p, L=100):
             return None
 
 
-class F_p2():
+class F_p2:
     base = 0
     p = 0
 
@@ -77,7 +77,10 @@ class F_p2():
 
     def __mul__(self, other):
         if isinstance(other, self.__class__):
-            new_a = self._a * other.a + self._b * other.b % self.__class__.p * self.__class__.base
+            new_a = (
+                self._a * other.a
+                + self._b * other.b % self.__class__.p * self.__class__.base
+            )
             new_b = self._a * other.b + self._b * other.a
             return self.__class__(new_a, new_b)
         else:
@@ -237,7 +240,7 @@ def _adj_decompose_int_prime_power(p, k):
         if t is None or t == NO_SOLUTION:
             return t
         else:
-            return t ** k
+            return t**k
 
 
 def _adj_decompose_int(n, diophantine_timeout, factoring_timeout, start_time):
@@ -265,7 +268,9 @@ def _adj_decompose_int(n, diophantine_timeout, factoring_timeout, start_time):
     return t
 
 
-def _adj_decompose_selfassociate(xi, diophantine_timeout, factoring_timeout, start_time):
+def _adj_decompose_selfassociate(
+    xi, diophantine_timeout, factoring_timeout, start_time
+):
     # xi \sim xi.conj_sq2
     if xi == 0:
         return ZOmega.from_int(0)
@@ -292,7 +297,7 @@ def _decompose_relatively_zomega_prime(partial_facs):
         while True:
             if i >= len(facs):
                 if ZRootTwo.sim(b, 1):
-                    u *= b ** k_b
+                    u *= b**k_b
                 else:
                     facs.append((b, k_b))
                 break
@@ -370,7 +375,7 @@ def _adj_decompose_zomega_prime_power(eta, k):
         if t is None or t == NO_SOLUTION:
             return t
         else:
-            return t ** k
+            return t**k
 
 
 def _adj_decompose_selfcoprime(xi, diophantine_timeout, factoring_timeout, start_time):
@@ -407,11 +412,15 @@ def _adj_decompose(xi, diophantine_timeout, factoring_timeout, start_time):
 
     d = ZRootTwo.gcd(xi, xi.conj_sq2)
     eta = xi // d
-    t1 = _adj_decompose_selfassociate(d, diophantine_timeout, factoring_timeout, start_time)
+    t1 = _adj_decompose_selfassociate(
+        d, diophantine_timeout, factoring_timeout, start_time
+    )
     if t1 == NO_SOLUTION:
         return NO_SOLUTION
     else:
-        t2 = _adj_decompose_selfcoprime(eta, diophantine_timeout, factoring_timeout, start_time)
+        t2 = _adj_decompose_selfcoprime(
+            eta, diophantine_timeout, factoring_timeout, start_time
+        )
         if t2 == NO_SOLUTION:
             return NO_SOLUTION
         else:
@@ -441,9 +450,12 @@ def _diophantine(xi, diophantine_timeout, factoring_timeout, start_time):
 def diophantine_dyadic(xi, diophantine_timeout=200, factoring_timeout=50):
     k_div_2, k_mod_2 = xi.k >> 1, xi.k & 1
 
-    t = _diophantine(xi.alpha * ZRootTwo(1, 1) if k_mod_2 else xi.alpha,
-                     diophantine_timeout=diophantine_timeout, factoring_timeout=factoring_timeout,
-                     start_time=time.time())
+    t = _diophantine(
+        xi.alpha * ZRootTwo(1, 1) if k_mod_2 else xi.alpha,
+        diophantine_timeout=diophantine_timeout,
+        factoring_timeout=factoring_timeout,
+        start_time=time.time(),
+    )
     if t == NO_SOLUTION:
         return NO_SOLUTION
     else:

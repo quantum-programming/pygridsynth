@@ -1,7 +1,7 @@
-from .mymath import log, floorsqrt
-from .ring import ZOmega, LAMBDA
 from .grid_op import EllipsePair, GridOp
+from .mymath import floorsqrt, log
 from .myplot import plot_sol
+from .ring import LAMBDA, ZOmega
 
 
 def _reduction(ellipse_pair, opG_l, opG_r, new_opG):
@@ -9,8 +9,8 @@ def _reduction(ellipse_pair, opG_l, opG_r, new_opG):
 
 
 def _shift_ellipse_pair(ellipse_pair, n):
-    lambda_n = LAMBDA ** n
-    lambda_inv_n = LAMBDA ** -n
+    lambda_n = LAMBDA**n
+    lambda_inv_n = LAMBDA**-n
     ellipse_pair.A.a *= lambda_inv_n.to_real
     ellipse_pair.A.d *= lambda_n.to_real
     ellipse_pair.B.a *= lambda_n.to_real
@@ -26,9 +26,13 @@ def _step_lemma(ellipse_pair, opG_l, opG_r, verbose=False):
     if verbose:
         print("-----")
         print(f"skew: {ellipse_pair.skew}, bias: {ellipse_pair.bias}")
-        print(f"bias(A): {A.bias}, bias(B): {B.bias}, "
-              + "sign(A.b):" + ("+" if A.b >= 0 else "-")
-              + ", sign(B.b):" + ("+" if B.b >= 0 else "-"))
+        print(
+            f"bias(A): {A.bias}, bias(B): {B.bias}, "
+            + "sign(A.b):"
+            + ("+" if A.b >= 0 else "-")
+            + ", sign(B.b):"
+            + ("+" if B.b >= 0 else "-")
+        )
         print("-----")
     if B.b < 0:
         if verbose:
@@ -45,7 +49,7 @@ def _step_lemma(ellipse_pair, opG_l, opG_r, verbose=False):
         OP_S = GridOp(ZOmega(-1, 0, 1, 1), ZOmega(1, -1, 1, 0))
         if verbose:
             print(f"S ({n=})")
-        return _reduction(ellipse_pair, opG_l, opG_r, OP_S ** n)
+        return _reduction(ellipse_pair, opG_l, opG_r, OP_S**n)
     elif ellipse_pair.skew <= 15:
         return ellipse_pair, opG_l, opG_r, True
     elif ellipse_pair.bias > 5.8285 or ellipse_pair.bias < 0.17157:
@@ -96,7 +100,9 @@ def _to_upright_ellipse_pair(ellipseA, ellipseB, verbose=False):
     OP_I = GridOp(ZOmega(0, 0, 0, 1), ZOmega(0, 1, 0, 0))
     opG_l, opG_r = OP_I, OP_I
     while True:
-        ellipse_pair, opG_l, opG_r, end = _step_lemma(ellipse_pair, opG_l, opG_r, verbose=verbose)
+        ellipse_pair, opG_l, opG_r, end = _step_lemma(
+            ellipse_pair, opG_l, opG_r, verbose=verbose
+        )
         if end:
             break
     return opG_l * opG_r
