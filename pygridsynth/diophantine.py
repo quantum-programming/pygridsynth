@@ -8,12 +8,14 @@ from .ring import DOmega, ZOmega, ZRootTwo
 
 NO_SOLUTION = "no solution"
 
+rng = random.Random(42)
+
 
 def _find_factor(n, factoring_timeout, M=128):
     if not (n & 1) and n > 2:
         return 2
 
-    a = random.randint(1, n)
+    a = rng.randint(1, n)
     y, r, k = a, 1, 0
     L = int(10 ** (len(str(n)) / 4) * 1.1774 + 10)
 
@@ -46,7 +48,7 @@ def _find_factor(n, factoring_timeout, M=128):
 
 def _sqrt_negative_one(p, L=100):
     for _ in range(L):
-        b = random.randint(1, p - 1)
+        b = rng.randint(1, p - 1)
         h = pow(b, (p - 1) >> 2, p)
         r = h * h % p
         if r == p - 1:
@@ -116,7 +118,7 @@ def _root_mod(x, p, L=100):
         return None
 
     for _ in range(L):
-        b = random.randint(1, p - 1)
+        b = rng.randint(1, p - 1)
         r = pow(b, p - 1, p)
         if r != 1:
             return None
@@ -141,7 +143,7 @@ def _is_prime(n, L=4):
         r += 1
         d >>= 1
     for _ in range(L):
-        a = random.randint(1, n - 1)
+        a = rng.randint(1, n - 1)
         a = pow(a, d, n)
         if a == 1:
             return True
