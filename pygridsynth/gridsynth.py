@@ -92,12 +92,12 @@ def error(theta, gates):
 
 
 def check(theta, gates):
-    # t_count = gates.count("T")
-    # h_count = gates.count("H")
+    t_count = gates.count("T")
+    h_count = gates.count("H")
     u_approx = DOmegaUnitary.from_gates(gates)
     e = error(theta, gates)
     print(f"{gates=}")
-    # print(f"{t_count=}, {h_count=}")
+    print(f"{t_count=}, {h_count=}")
     print(f"u_approx={u_approx.to_matrix}")
     print(f"{e=}")
 
@@ -174,7 +174,7 @@ def gridsynth(
         k += 1
 
 
-def gridsynth_gates(
+def gridsynth_circuit(
     theta,
     epsilon,
     wires=[0],
@@ -203,3 +203,25 @@ def gridsynth_gates(
         print(f"total time: {(time.time() - start_total) * 1000} ms")
 
     return circuit
+
+
+def gridsynth_gates(
+    theta,
+    epsilon,
+    decompose_phase_gate=True,
+    loop_controller=None,
+    verbose=False,
+    measure_time=False,
+    show_graph=False,
+):
+    circuit = gridsynth_circuit(
+        theta=theta,
+        epsilon=epsilon,
+        wires=[0],
+        decompose_phase_gate=decompose_phase_gate,
+        loop_controller=loop_controller,
+        verbose=verbose,
+        measure_time=measure_time,
+        show_graph=show_graph,
+    )
+    return circuit.to_simple_str()

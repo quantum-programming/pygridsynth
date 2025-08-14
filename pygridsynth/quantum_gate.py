@@ -74,7 +74,7 @@ class SingleQubitGate(QuantumGate):
         return self._wires[0]
 
     def __str__(self) -> str:
-        return f"QuantumGate({self.matrix}, {self.target_qubit})"
+        return f"SingleQubitGate({self.matrix}, {self.target_qubit})"
 
     def to_whole_matrix(self, num_qubits):
         whole_matrix = mpmath.matrix(2**num_qubits)
@@ -100,6 +100,9 @@ class HGate(SingleQubitGate):
         super().__init__(matrix, target_qubit)
 
     def __str__(self) -> str:
+        return f"HGate({self.target_qubit})"
+
+    def to_simple_str(self) -> str:
         return "H"
 
 
@@ -109,6 +112,9 @@ class TGate(SingleQubitGate):
         super().__init__(matrix, target_qubit)
 
     def __str__(self) -> str:
+        return f"TGate({self.target_qubit})"
+
+    def to_simple_str(self) -> str:
         return "T"
 
 
@@ -118,6 +124,9 @@ class SGate(SingleQubitGate):
         super().__init__(matrix, target_qubit)
 
     def __str__(self) -> str:
+        return f"SGate({self.target_qubit})"
+
+    def to_simple_str(self) -> str:
         return "S"
 
 
@@ -127,6 +136,9 @@ class WGate(SingleQubitGate):
         super().__init__(matrix, [])
 
     def __str__(self) -> str:
+        return "WGate()"
+
+    def to_simple_str(self) -> str:
         return "W"
 
     def to_whole_matrix(self, num_qubits):
@@ -139,6 +151,9 @@ class SXGate(SingleQubitGate):
         super().__init__(matrix, target_qubit)
 
     def __str__(self) -> str:
+        return f"SXGate({self.target_qubit})"
+
+    def to_simple_str(self) -> str:
         return "X"
 
 
@@ -241,9 +256,10 @@ class QuantumCircuit(list):
         self._phase = phase
 
     def __str__(self):
-        return f"exp(1.j * {self._phase}) * \n" + "* \n".join(
-            str(gate) for gate in self
-        )
+        return f"exp(1.j * {self._phase}) * " + " * ".join(str(gate) for gate in self)
+
+    def to_simple_str(self):
+        return "".join(g.to_simple_str() for g in self)
 
     def __add__(self, other):
         if isinstance(other, QuantumCircuit):

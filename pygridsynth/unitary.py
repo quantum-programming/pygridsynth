@@ -131,9 +131,9 @@ class DOmegaUnitary:
         return cls(DOmega.from_int(1), DOmega.from_int(0), 0)
 
     @classmethod
-    def from_gates(cls, gates):
+    def from_circuit(cls, circuit):
         unitary = cls.identity()
-        for g in reversed(gates):
+        for g in reversed(circuit):
             if isinstance(g, HGate):
                 unitary = unitary.renew_denomexp(unitary.k + 1).mul_by_H_from_left()
             elif isinstance(g, TGate):
@@ -143,6 +143,24 @@ class DOmegaUnitary:
             elif isinstance(g, SXGate):
                 unitary = unitary.mul_by_X_from_left()
             elif isinstance(g, WGate):
+                unitary = unitary.mul_by_W_from_left()
+            else:
+                raise ValueError
+        return unitary.reduce_denomexp()
+
+    @classmethod
+    def from_gates(cls, gates):
+        unitary = cls.identity()
+        for g in reversed(gates):
+            if g == "H":
+                unitary = unitary.renew_denomexp(unitary.k + 1).mul_by_H_from_left()
+            elif g == "T":
+                unitary = unitary.mul_by_T_from_left()
+            elif g == "S":
+                unitary = unitary.mul_by_S_from_left()
+            elif g == "X":
+                unitary = unitary.mul_by_X_from_left()
+            elif g == "W":
                 unitary = unitary.mul_by_W_from_left()
             else:
                 raise ValueError
