@@ -66,13 +66,12 @@ python -m pygridsynth <theta> <epsilon> [options]
 
 ### Options
 
-- `--dps`: Sets the working precision of the calculation. If `--dps` is not given, then the working precision will
-           be calculated from `epsilon`.
-- `--dtimeout`, `-dt`: Sets the timeout for solving diophantine equations in milliseconds.
-- `--ftimeout`, `-ft`: Sets the timeout for factorization in milliseconds.
-- `--dloop`, `-dl`: Sets the maximum loop count for the diophantine algorithm (default: `2000`).
-- `--floop`, `-fl`: Sets the maximum loop count for the factoring algorithm (default: `500`).
-- `--seed`: Sets the random seed for deterministic results (default: `0`).
+- `--dps`: Sets the working precision of the calculation. If not specified, the working precision will be calculated from `epsilon`.
+- `--dtimeout`, `-dt`: Maximum milliseconds allowed for a single Diophantine equation solving.
+- `--ftimeout`, `-ft`: Maximum milliseconds allowed for a single integer factoring attempt.
+- `--dloop`, `-dl`: Maximum number of failed integer factoring attempts allowed during Diophantine equation solving　(default: `2000`).
+- `--floop`, `-fl`: Maximum number of failed integer factoring attempts allowed during the factoring process (default: `500`).
+- `--seed`: Random seed for deterministic results. (default: `0`)
 - `--verbose`, `-v`: Enables detailed output.
 - `--time`, `-t`: Measures the execution time.
 - `--showgraph`, `-g`: Displays the decomposition result as a graph.

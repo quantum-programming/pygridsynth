@@ -7,10 +7,16 @@ from .gridsynth import gridsynth_gates
 from .loop_controller import LoopController
 
 helps = {
-    "dt": "Diophantine algorithm timeout in milliseconds",
-    "ft": "Factoring algorithm timeout in milliseconds",
-    "dl": "Diophantine algorithm max loop count",
-    "fl": "Factoring algorithm max loop count",
+    "dt": "Maximum milliseconds allowed for a single Diophantine equation solving",
+    "ft": "Maximum milliseconds allowed for a single integer factoring attempt",
+    "dl": (
+        "Maximum number of failed integer factoring attempts "
+        "allowed during Diophantine equation solving"
+    ),
+    "fl": (
+        "Maximum number of failed integer factoring attempts "
+        "allowed during the factoring process"
+    ),
     "seed": "Random seed for deterministic results",
 }
 
