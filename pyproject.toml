@@ -31,7 +31,7 @@ dev = [
 packages = ["pygridsynth"]
 
 [project.scripts]
-pygridsynth = "pygridsynth:main"
+pygridsynth = "pygridsynth.cli:main"
 
 [project.urls]
 "Homepage" = "https://github.com/quantum-programming/pygridsynth"
