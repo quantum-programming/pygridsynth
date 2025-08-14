@@ -69,7 +69,7 @@ python -m pygridsynth <theta> <epsilon> [options]
 - `--dps`: Sets the working precision of the calculation. If not specified, the working precision will be calculated from `epsilon`.
 - `--dtimeout`, `-dt`: Maximum milliseconds allowed for a single Diophantine equation solving.
 - `--ftimeout`, `-ft`: Maximum milliseconds allowed for a single integer factoring attempt.
-- `--dloop`, `-dl`: Maximum number of failed integer factoring attempts allowed during Diophantine equation solving　(default: `2000`).
+- `--dloop`, `-dl`: Maximum number of failed integer factoring attempts allowed during Diophantine equation solving (default: `2000`).
 - `--floop`, `-fl`: Maximum number of failed integer factoring attempts allowed during the factoring process (default: `500`).
 - `--seed`: Random seed for deterministic results. (default: `0`)
 - `--verbose`, `-v`: Enables detailed output.
