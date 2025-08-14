@@ -1,10 +1,11 @@
 from functools import cached_property
+
 import mpmath
 
-from .ring import ZOmega, DOmega
+from .ring import DOmega, ZOmega
 
 
-class EllipsePair():
+class EllipsePair:
     def __init__(self, A, B):
         self.A = A
         self.B = B
@@ -24,7 +25,7 @@ class EllipsePair():
             return NotImplemented
 
 
-class GridOp():
+class GridOp:
     def __init__(self, u0, u1):
         self._u0 = u0
         self._u1 = u1
@@ -72,8 +73,12 @@ class GridOp():
         return self._u1.d
 
     def __str__(self):
-        return (f"[[{self.d0}{self.c0 - self.a0:+}/√2, {self.d1}{self.c1 - self.a1:+}/√2],\n"
-                f" [{self.b0}{self.c0 + self.a0:+}/√2, {self.b1}{self.c1 + self.a1:+}/√2]]")
+        return (
+            f"[[{self.d0}{self.c0 - self.a0:+}/√2,"
+            f" {self.d1}{self.c1 - self.a1:+}/√2],\n"
+            f" [{self.b0}{self.c0 + self.a0:+}/√2,"
+            f" {self.b1}{self.c1 + self.a1:+}/√2]]"
+        )
 
     @cached_property
     def _det_vec(self):
@@ -86,24 +91,38 @@ class GridOp():
 
     @cached_property
     def toMat(self):
-        return mpmath.matrix([[self._u0.real, self._u1.real], [self._u0.imag, self._u1.imag]])
+        return mpmath.matrix(
+            [[self._u0.real, self._u1.real], [self._u0.imag, self._u1.imag]]
+        )
 
     def __mul__(self, other):
         if isinstance(other, self.__class__):
             return GridOp(self * other.u0, self * other.u1)
         elif isinstance(other, ZOmega):
-            new_d = (self.d0 * other.d + self.d1 * other.b
-                     + (self.c1 - self.a1 + self.c0 - self.a0) // 2 * other.c
-                     + (self.c1 - self.a1 - self.c0 + self.a0) // 2 * other.a)
-            new_c = (self.c0 * other.d + self.c1 * other.b
-                     + (self.b1 + self.d1 + self.b0 + self.d0) // 2 * other.c
-                     + (self.b1 + self.d1 - self.b0 - self.d0) // 2 * other.a)
-            new_b = (self.b0 * other.d + self.b1 * other.b
-                     + (self.c1 + self.a1 + self.c0 + self.a0) // 2 * other.c
-                     + (self.c1 + self.a1 - self.c0 - self.a0) // 2 * other.a)
-            new_a = (self.a0 * other.d + self.a1 * other.b
-                     + (self.b1 - self.d1 + self.b0 - self.d0) // 2 * other.c
-                     + (self.b1 - self.d1 - self.b0 + self.d0) // 2 * other.a)
+            new_d = (
+                self.d0 * other.d
+                + self.d1 * other.b
+                + (self.c1 - self.a1 + self.c0 - self.a0) // 2 * other.c
+                + (self.c1 - self.a1 - self.c0 + self.a0) // 2 * other.a
+            )
+            new_c = (
+                self.c0 * other.d
+                + self.c1 * other.b
+                + (self.b1 + self.d1 + self.b0 + self.d0) // 2 * other.c
+                + (self.b1 + self.d1 - self.b0 - self.d0) // 2 * other.a
+            )
+            new_b = (
+                self.b0 * other.d
+                + self.b1 * other.b
+                + (self.c1 + self.a1 + self.c0 + self.a0) // 2 * other.c
+                + (self.c1 + self.a1 - self.c0 - self.a0) // 2 * other.a
+            )
+            new_a = (
+                self.a0 * other.d
+                + self.a1 * other.b
+                + (self.b1 - self.d1 + self.b0 - self.d0) // 2 * other.c
+                + (self.b1 - self.d1 - self.b0 + self.d0) // 2 * other.a
+            )
             return ZOmega(new_a, new_b, new_c, new_d)
         elif isinstance(other, DOmega):
             return DOmega(self * other.u, other.k)
@@ -116,9 +135,9 @@ class GridOp():
             return None
 
         new_c0 = (self.c1 + self.a1 - self.c0 - self.a0) // 2
-        new_a0 = (- self.c1 - self.a1 - self.c0 - self.a0) // 2
+        new_a0 = (-self.c1 - self.a1 - self.c0 - self.a0) // 2
         new_u0 = ZOmega(new_a0, -self.b0, new_c0, self.b1)
-        new_c1 = (- self.c1 + self.a1 + self.c0 - self.a0) // 2
+        new_c1 = (-self.c1 + self.a1 + self.c0 - self.a0) // 2
         new_a1 = (self.c1 - self.a1 + self.c0 - self.a0) // 2
         new_u1 = ZOmega(new_a1, self.d0, new_c1, -self.d1)
         if self._det_vec.b == -1:
@@ -129,6 +148,8 @@ class GridOp():
     def __pow__(self, other):
         if isinstance(other, int):
             if other < 0:
+                # Exp requires that the operator is special.
+                assert self.inv is not None
                 return self.inv ** (-other)
 
             new = self.__class__(ZOmega(0, 0, 0, 1), ZOmega(0, 1, 0, 0))

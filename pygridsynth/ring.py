@@ -1,12 +1,13 @@
 import numbers
 from functools import cached_property, total_ordering
+
 import mpmath
 
-from .mymath import SQRT2, ntz, sign, floorsqrt, rounddiv, pow_sqrt2
+from .mymath import SQRT2, floorsqrt, ntz, pow_sqrt2, rounddiv, sign
 
 
 @total_ordering
-class ZRootTwo():
+class ZRootTwo:
     def __init__(self, a, b):
         self._a = a
         self._b = b
@@ -53,9 +54,15 @@ class ZRootTwo():
             return self < self.from_int(other)
         elif isinstance(other, self.__class__):
             if self._b < other.b:
-                return self._a < other.a or (self._a - other.a) ** 2 < 2 * (self._b - other.b) ** 2
+                return (
+                    self._a < other.a
+                    or (self._a - other.a) ** 2 < 2 * (self._b - other.b) ** 2
+                )
             else:
-                return self._a < other.a and (self._a - other.a) ** 2 > 2 * (self._b - other.b) ** 2
+                return (
+                    self._a < other.a
+                    and (self._a - other.a) ** 2 > 2 * (self._b - other.b) ** 2
+                )
         else:
             return False
 
@@ -76,7 +83,7 @@ class ZRootTwo():
             return NotImplemented
 
     def __sub__(self, other):
-        return self + (- other)
+        return self + (-other)
 
     def __rsub__(self, other):
         return (-self) + other
@@ -114,7 +121,7 @@ class ZRootTwo():
     def __pow__(self, other):
         if isinstance(other, numbers.Integral):
             if other < 0:
-                return self.inv ** -other
+                return self.inv**-other
             else:
                 new = self.__class__(1, 0)
                 tmp = self
@@ -217,7 +224,7 @@ class ZRootTwo():
 
     @cached_property
     def norm(self):
-        return self._a ** 2 - 2 * self._b ** 2
+        return self._a**2 - 2 * self._b**2
 
     @cached_property
     def to_real(self):
@@ -229,7 +236,7 @@ class ZRootTwo():
 
 
 @total_ordering
-class DRootTwo():
+class DRootTwo:
     def __init__(self, alpha, k):
         self._alpha = alpha
         self._k = k
@@ -320,7 +327,7 @@ class DRootTwo():
             return NotImplemented
 
     def __sub__(self, other):
-        return self + (- other)
+        return self + (-other)
 
     def __rsub__(self, other):
         return (-self) + other
@@ -373,14 +380,18 @@ class DRootTwo():
             if d_mod_2 == 0:
                 bit = (1 << d_div_2) - 1
                 if self._alpha.a & bit == 0 and self._alpha.b & bit == 0:
-                    new_alpha = ZRootTwo(self._alpha.a >> d_div_2, self._alpha.b >> d_div_2)
+                    new_alpha = ZRootTwo(
+                        self._alpha.a >> d_div_2, self._alpha.b >> d_div_2
+                    )
                 else:
                     raise ValueError
             else:
                 bit = (1 << d_div_2) - 1
                 bit2 = (1 << (d_div_2 + 1)) - 1
                 if self._alpha.a & bit2 == 0 and self._alpha.b & bit == 0:
-                    new_alpha = ZRootTwo(self._alpha.b >> d_div_2, self._alpha.a >> (d_div_2 + 1))
+                    new_alpha = ZRootTwo(
+                        self._alpha.b >> d_div_2, self._alpha.a >> (d_div_2 + 1)
+                    )
                 else:
                     raise ValueError
             return self.__class__(new_alpha, self._k)
@@ -414,15 +425,18 @@ class DRootTwo():
 
     @cached_property
     def conj_sq2(self):
-        return (self.__class__(- self._alpha.conj_sq2, self._k) if self._k & 1
-                else self.__class__(self._alpha.conj_sq2, self._k))
+        return (
+            self.__class__(-self._alpha.conj_sq2, self._k)
+            if self._k & 1
+            else self.__class__(self._alpha.conj_sq2, self._k)
+        )
 
     @classmethod
     def power_of_inv_sqrt2(cls, k):
         return cls(ZRootTwo(1, 0), k)
 
 
-class ZOmega():
+class ZOmega:
     def __init__(self, a, b, c, d):
         self._a = a
         self._b = b
@@ -469,8 +483,12 @@ class ZOmega():
         elif isinstance(other, ZRootTwo):
             return self == self.from_zroottwo(other)
         elif isinstance(other, self.__class__):
-            return (self._a == other.a and self._b == other.b
-                    and self._c == other.c and self._d == other.d)
+            return (
+                self._a == other.a
+                and self._b == other.b
+                and self._c == other.c
+                and self._d == other.d
+            )
         else:
             return False
 
@@ -480,8 +498,12 @@ class ZOmega():
         elif isinstance(other, ZRootTwo):
             return self + self.from_zroottwo(other)
         elif isinstance(other, self.__class__):
-            return self.__class__(self._a + other.a, self._b + other.b,
-                                  self._c + other.c, self._d + other.d)
+            return self.__class__(
+                self._a + other.a,
+                self._b + other.b,
+                self._c + other.c,
+                self._d + other.d,
+            )
         else:
             return NotImplemented
 
@@ -496,7 +518,7 @@ class ZOmega():
             return NotImplemented
 
     def __sub__(self, other):
-        return self + (- other)
+        return self + (-other)
 
     def __rsub__(self, other):
         return (-self) + other
@@ -562,8 +584,9 @@ class ZOmega():
         elif isinstance(other, self.__class__):
             p = self * other.conj * other.conj.conj_sq2 * other.conj_sq2
             k = other.norm
-            q = self.__class__(rounddiv(p.a, k), rounddiv(p.b, k),
-                               rounddiv(p.c, k), rounddiv(p.d, k))
+            q = self.__class__(
+                rounddiv(p.a, k), rounddiv(p.b, k), rounddiv(p.c, k), rounddiv(p.d, k)
+            )
             r = self - other * q
             return q, r
         else:
@@ -647,13 +670,18 @@ class ZOmega():
 
     @cached_property
     def residue(self):
-        return (self._a & 1) << 3 | (self._b & 1) << 2 | (self._c & 1) << 1 | (self._d & 1)
+        return (
+            (self._a & 1) << 3 | (self._b & 1) << 2 | (self._c & 1) << 1 | (self._d & 1)
+        )
 
     @cached_property
     def norm(self):
-        return ((self._a ** 2 + self._b ** 2 + self._c ** 2 + self._d ** 2) ** 2
-                - 2 * (self._a * self._b + self._b * self._c
-                       + self._c * self._d - self._d * self._a) ** 2)
+        return (self._a**2 + self._b**2 + self._c**2 + self._d**2) ** 2 - 2 * (
+            self._a * self._b
+            + self._b * self._c
+            + self._c * self._d
+            - self._d * self._a
+        ) ** 2
 
     @cached_property
     def real(self):
@@ -665,7 +693,7 @@ class ZOmega():
 
     @cached_property
     def to_complex(self):
-        return self.real + 1.j * self.imag
+        return self.real + 1.0j * self.imag
 
     @cached_property
     def to_vector(self):
@@ -680,7 +708,7 @@ class ZOmega():
         return self.__class__(-self._a, self._b, -self._c, self._d)
 
 
-class DOmega():
+class DOmega:
     def __init__(self, u, k):
         self._u = u
         self._k = k
@@ -713,7 +741,9 @@ class DOmega():
 
     @classmethod
     def from_droottwo_vector(cls, x, y, k):
-        return (cls.from_droottwo(x) + cls.from_droottwo(y) * ZOmega(0, 1, 0, 0)).renew_denomexp(k)
+        return (
+            cls.from_droottwo(x) + cls.from_droottwo(y) * ZOmega(0, 1, 0, 0)
+        ).renew_denomexp(k)
 
     @classmethod
     def from_zomega(cls, x):
@@ -766,7 +796,7 @@ class DOmega():
             return NotImplemented
 
     def __sub__(self, other):
-        return self + (- other)
+        return self + (-other)
 
     def __rsub__(self, other):
         return (-self) + other
@@ -816,10 +846,12 @@ class DOmega():
 
     def mul_by_inv_sqrt2(self):
         if not ((self._u.b + self._u.d) & 1) and not ((self._u.c + self._u.a) & 1):
-            new_u = ZOmega((self._u.b - self._u.d) >> 1,
-                           (self._u.c + self._u.a) >> 1,
-                           (self._u.b + self._u.d) >> 1,
-                           (self._u.c - self._u.a) >> 1)
+            new_u = ZOmega(
+                (self._u.b - self._u.d) >> 1,
+                (self._u.c + self._u.a) >> 1,
+                (self._u.b + self._u.d) >> 1,
+                (self._u.c - self._u.a) >> 1,
+            )
         else:
             raise ValueError
         return self.__class__(new_u, self._k)
@@ -831,22 +863,34 @@ class DOmega():
             d_div_2, d_mod_2 = (-d) >> 1, (-d) & 1
             if d_mod_2 == 0:
                 bit = (1 << d_div_2) - 1
-                if (self._u.a & bit == 0 and self._u.b & bit == 0
-                        and self._u.c & bit == 0 and self._u.c & bit == 0):
-                    new_u = ZOmega(self._u.a >> d_div_2, self._u.b >> d_div_2,
-                                   self._u.c >> d_div_2, self._u.d >> d_div_2)
+                if (
+                    self._u.a & bit == 0
+                    and self._u.b & bit == 0
+                    and self._u.c & bit == 0
+                    and self._u.c & bit == 0
+                ):
+                    new_u = ZOmega(
+                        self._u.a >> d_div_2,
+                        self._u.b >> d_div_2,
+                        self._u.c >> d_div_2,
+                        self._u.d >> d_div_2,
+                    )
                 else:
                     raise ValueError
             else:
                 bit = (1 << (d_div_2 + 1)) - 1
-                if ((self._u.b - self._u.d) & bit == 0
-                        and (self._u.c + self._u.a) & bit == 0
-                        and (self._u.b + self._u.d) & bit == 0
-                        and (self._u.c - self._u.a) & bit == 0):
-                    new_u = ZOmega((self._u.b - self._u.d) >> (d_div_2 + 1),
-                                   (self._u.c + self._u.a) >> (d_div_2 + 1),
-                                   (self._u.b + self._u.d) >> (d_div_2 + 1),
-                                   (self._u.c - self._u.a) >> (d_div_2 + 1))
+                if (
+                    (self._u.b - self._u.d) & bit == 0
+                    and (self._u.c + self._u.a) & bit == 0
+                    and (self._u.b + self._u.d) & bit == 0
+                    and (self._u.c - self._u.a) & bit == 0
+                ):
+                    new_u = ZOmega(
+                        (self._u.b - self._u.d) >> (d_div_2 + 1),
+                        (self._u.c + self._u.a) >> (d_div_2 + 1),
+                        (self._u.b + self._u.d) >> (d_div_2 + 1),
+                        (self._u.c - self._u.a) >> (d_div_2 + 1),
+                    )
                 else:
                     raise ValueError
             return self.__class__(new_u, self._k)
@@ -888,7 +932,7 @@ class DOmega():
 
     @cached_property
     def to_complex(self):
-        return self.real + 1.j * self.imag
+        return self.real + 1.0j * self.imag
 
     @cached_property
     def to_vector(self):
@@ -900,11 +944,22 @@ class DOmega():
 
     @cached_property
     def conj_sq2(self):
-        return (self.__class__(- self._u.conj_sq2, self._k) if self._k & 1
-                else self.__class__(self._u.conj_sq2, self._k))
+        return (
+            self.__class__(-self._u.conj_sq2, self._k)
+            if self._k & 1
+            else self.__class__(self._u.conj_sq2, self._k)
+        )
 
 
 LAMBDA = ZRootTwo(1, 1)
 OMEGA = ZOmega(0, 0, 1, 0)
-OMEGA_POWER = [ZOmega(0, 0, 0, 1), ZOmega(0, 0, 1, 0), ZOmega(0, 1, 0, 0), ZOmega(1, 0, 0, 0),
-               ZOmega(0, 0, 0, -1), ZOmega(0, 0, -1, 0), ZOmega(0, -1, 0, 0), ZOmega(-1, 0, 0, 0)]
+OMEGA_POWER = [
+    ZOmega(0, 0, 0, 1),
+    ZOmega(0, 0, 1, 0),
+    ZOmega(0, 1, 0, 0),
+    ZOmega(1, 0, 0, 0),
+    ZOmega(0, 0, 0, -1),
+    ZOmega(0, 0, -1, 0),
+    ZOmega(0, -1, 0, 0),
+    ZOmega(-1, 0, 0, 0),
+]

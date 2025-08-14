@@ -1,13 +1,15 @@
+import numbers
 from abc import ABC, abstractmethod
 from functools import cached_property
-import numbers
+from typing import Optional, Tuple
+
 import mpmath
 
-from .mymath import sqrt
 from .grid_op import GridOp
+from .mymath import sqrt
 
 
-class Interval():
+class Interval:
     def __init__(self, l, r):
         self.l = l
         self.r = r
@@ -38,7 +40,7 @@ class Interval():
         return (-self) + other
 
     def __neg__(self):
-        return self.__class__(- self.r, - self.l)
+        return self.__class__(-self.r, -self.l)
 
     def __mul__(self, other):
         if isinstance(other, numbers.Real):
@@ -72,7 +74,7 @@ class Interval():
         return self.l <= x <= self.r
 
 
-class Rectangle():
+class Rectangle:
     def __init__(self, x_l, x_r, y_l, y_r):
         self.I_x = Interval(x_l, x_r)
         self.I_y = Interval(y_l, y_r)
@@ -103,13 +105,13 @@ class Rectangle():
     def area(self):
         return self.I_x.width * self.I_y.width
 
-    def plot(self, ax, color='black'):
+    def plot(self, ax, color="black"):
         x = [self.I_x.l, self.I_x.l, self.I_x.r, self.I_x.r, self.I_x.l]
         y = [self.I_y.l, self.I_y.r, self.I_y.r, self.I_y.l, self.I_y.l]
         ax.plot(x, y, c=color)
 
 
-class Ellipse():
+class Ellipse:
     def __init__(self, D, p):
         self.D = D
         self.p = p
@@ -180,7 +182,11 @@ class Ellipse():
             M10 = other.inv.toMat[1, 0]
             M11 = other.inv.toMat[1, 1]
             a = self.a * M00 * M00 + 2 * self.b * M00 * M10 + self.d * M10 * M10
-            b = self.a * M00 * M01 + self.b * (M00 * M11 + M01 * M10) + self.d * M10 * M11
+            b = (
+                self.a * M00 * M01
+                + self.b * (M00 * M11 + M01 * M10)
+                + self.d * M10 * M11
+            )
             d = self.a * M01 * M01 + 2 * self.b * M11 * M01 + self.d * M11 * M11
             new_D = mpmath.matrix([[a, b], [b, d]])
 
@@ -200,7 +206,7 @@ class Ellipse():
 
     def __truediv__(self, other):
         if isinstance(other, numbers.Real):
-            return self.__class__(self.D * other ** 2, self.p / other)
+            return self.__class__(self.D * other**2, self.p / other)
         else:
             return NotImplemented
 
@@ -210,7 +216,7 @@ class Ellipse():
 
     @property
     def sqrt_det(self):
-        det = self.d * self.a - self.b ** 2
+        det = self.d * self.a - self.b**2
         return sqrt(det)
 
     def normalize(self):
@@ -218,7 +224,7 @@ class Ellipse():
 
     @property
     def skew(self):
-        return self.b ** 2
+        return self.b**2
 
     @property
     def bias(self):
@@ -234,7 +240,7 @@ class Ellipse():
             vx[i] += eig_vec[0, 1] * mpmath.sin(t) / sqrt(eig_val[1])
             vy[i] += eig_vec[1, 0] * mpmath.cos(t) / sqrt(eig_val[0])
             vy[i] += eig_vec[1, 1] * mpmath.sin(t) / sqrt(eig_val[1])
-        ax.plot(vx, vy, c='orangered')
+        ax.plot(vx, vy, c="orangered")
 
 
 class ConvexSet(ABC):
@@ -242,7 +248,7 @@ class ConvexSet(ABC):
         self._ellipse = ellipse
 
     @abstractmethod
-    def inside(self, u):
+    def inside(self, u) -> bool:
         pass
 
     @property
@@ -250,5 +256,5 @@ class ConvexSet(ABC):
         return self._ellipse
 
     @abstractmethod
-    def intersect(self, u, v):
+    def intersect(self, u0, v) -> Optional[Tuple[float, float]]:
         pass

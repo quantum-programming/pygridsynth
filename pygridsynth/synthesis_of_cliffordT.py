@@ -1,6 +1,6 @@
+from .normal_form import NormalForm
 from .ring import OMEGA_POWER
 from .unitary import DOmegaUnitary
-from .normal_form import NormalForm
 from .quantum_gate import W_PHASE, QuantumCircuit, HGate, TGate, SGate, SXGate, WGate
 
 
@@ -17,7 +17,11 @@ def _reduce_denomexp(unitary, wires):
         elif m == 2:
             return [SGate(target_qubit=wires[0]), HGate(target_qubit=wires[0])]
         elif m == 3:
-            return [TGate(target_qubit=wires[0]), SGate(target_qubit=wires[0]), HGate(target_qubit=wires[0])]
+            return [
+                TGate(target_qubit=wires[0]),
+                SGate(target_qubit=wires[0]),
+                HGate(target_qubit=wires[0]),
+            ]
 
     residue_z = unitary.z.residue
     residue_w = unitary.w.residue
@@ -27,14 +31,20 @@ def _reduce_denomexp(unitary, wires):
     if m < 0:
         m += 4
     if residue_squared_z == 0b0000:
-        unitary = unitary.mul_by_H_and_T_power_from_left(0).renew_denomexp(unitary.k - 1)
+        unitary = unitary.mul_by_H_and_T_power_from_left(0).renew_denomexp(
+            unitary.k - 1
+        )
         return t_power_and_h(0), unitary
     elif residue_squared_z == 0b1010:
-        unitary = unitary.mul_by_H_and_T_power_from_left(-m).renew_denomexp(unitary.k - 1)
+        unitary = unitary.mul_by_H_and_T_power_from_left(-m).renew_denomexp(
+            unitary.k - 1
+        )
         return t_power_and_h(m), unitary
     elif residue_squared_z == 0b0001:
         if BIT_COUNT[residue_z] == BIT_COUNT[residue_w]:
-            unitary = unitary.mul_by_H_and_T_power_from_left(-m).renew_denomexp(unitary.k - 1)
+            unitary = unitary.mul_by_H_and_T_power_from_left(-m).renew_denomexp(
+                unitary.k - 1
+            )
             return t_power_and_h(m), unitary
         else:
             unitary = unitary.mul_by_H_and_T_power_from_left(-m)

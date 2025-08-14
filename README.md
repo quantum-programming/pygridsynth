@@ -23,9 +23,35 @@ Or, to install from source:
 pip install git+https://github.com/quantum-programming/pygridsynth.git
 ```
 
+### Install executable
+
+You can optionally install an executable script called `pygridsynth` with
+
+```bash
+pip install .
+```
+
+Or, to install in development (editable) mode
+
+```bash
+pip install -e .
+```
+
+The versions of `pygridsynth` available on pypi do not yet support
+installing an executable in this way.
+
+Once you have installed this executable, you can use `pygridsynth` like this
+
+```sh
+shell> pygridsynth <theta> <epsilon> [options]
+```
+
+or `pygridsynth --help` for brief information on calling the script.
+
 ## Usage
 
-`pygridsynth` can be used as a command-line tool.
+`pygridsynth` can be used as a command-line tool even if you have not installed the
+executable.
 
 ### Command-Line Example
 
@@ -40,9 +66,13 @@ python -m pygridsynth <theta> <epsilon> [options]
 
 ### Options
 
-- `--dps`: Sets the calculation precision (default: `128`).
-- `--dtimeout`, `-dt`: Sets the timeout for solving diophantine equations in milliseconds (default: `200`).
-- `--ftimeout`, `-ft`: Sets the timeout for factorization in milliseconds (default: `50`).
+- `--dps`: Sets the working precision of the calculation. If `--dps` is not given, then the working precision will
+           be calculated from `epsilon`.
+- `--dtimeout`, `-dt`: Sets the timeout for solving diophantine equations in milliseconds.
+- `--ftimeout`, `-ft`: Sets the timeout for factorization in milliseconds.
+- `--dloop`, `-dl`: Sets the maximum loop count for the diophantine algorithm (default: `2000`).
+- `--floop`, `-fl`: Sets the maximum loop count for the factoring algorithm (default: `500`).
+- `--seed`: Sets the random seed for deterministic results (default: `0`).
 - `--verbose`, `-v`: Enables detailed output.
 - `--time`, `-t`: Measures the execution time.
 - `--showgraph`, `-g`: Displays the decomposition result as a graph.
@@ -50,7 +80,7 @@ python -m pygridsynth <theta> <epsilon> [options]
 ### Example Execution
 
 ```bash
-python -m pygridsynth 0.5 1e-50 --dps 256 --verbose --time
+python -m pygridsynth 0.5 1e-50 --verbose --time
 ```
 
 This command will:
@@ -63,8 +93,9 @@ This command will:
 You can also use `pygridsynth` directly in your scripts:
 
 ```python
-from pygridsynth.gridsynth import gridsynth_gates
 import mpmath
+
+from pygridsynth.gridsynth import gridsynth_gates
 
 mpmath.mp.dps = 128
 theta = mpmath.mpmathify("0.5")
@@ -76,11 +107,11 @@ print(gates)
 
 ## Contributing
 
-Bug reports and feature requests are welcome. Please submit them via the [GitHub repository](https://github.com/quantum-programming/pygridsynth) Issues section. Contributions must comply with the GNU General Public License v3 or later.
+Bug reports and feature requests are welcome. Please submit them via the [GitHub repository](https://github.com/quantum-programming/pygridsynth) Issues section. Contributions must comply with the MIT License.
 
 ## License
 
-This project is licensed under the GNU General Public License v3 or later.
+This project is licensed under the MIT License.
 
 ## References
 

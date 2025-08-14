@@ -1,7 +1,7 @@
 import itertools
 
-from .mymath import SQRT2, floor, ceil, pow_sqrt2, floorlog
-from .ring import ZRootTwo, DRootTwo, LAMBDA
+from .mymath import SQRT2, ceil, floor, floorlog, pow_sqrt2
+from .ring import LAMBDA, DRootTwo, ZRootTwo
 
 
 def _solve_ODGP_internal(I, J):
@@ -23,10 +23,12 @@ def _solve_ODGP_internal(I, J):
 
             return itertools.chain.from_iterable(map(gen_sol, range(a_min, a_max + 1)))
         else:
-            lambda_n = LAMBDA ** n
-            lambda_inv_n = LAMBDA ** -n
-            lambda_conj_sq2_n = LAMBDA.conj_sq2 ** n
-            sol = _solve_ODGP_internal(I * lambda_n.to_real, J * lambda_conj_sq2_n.to_real)
+            lambda_n = LAMBDA**n
+            lambda_inv_n = LAMBDA**-n
+            lambda_conj_sq2_n = LAMBDA.conj_sq2**n
+            sol = _solve_ODGP_internal(
+                I * lambda_n.to_real, J * lambda_conj_sq2_n.to_real
+            )
             return map(lambda beta: beta * lambda_inv_n, sol)
 
 
@@ -39,13 +41,15 @@ def solve_ODGP(I, J):
     alpha = ZRootTwo(a, b)
     sol = _solve_ODGP_internal(I - alpha.to_real, J - alpha.conj_sq2.to_real)
     sol = map(lambda beta: beta + alpha, sol)
-    sol = filter(lambda beta: I.within(beta.to_real) and J.within(beta.conj_sq2.to_real), sol)
+    sol = filter(
+        lambda beta: I.within(beta.to_real) and J.within(beta.conj_sq2.to_real), sol
+    )
     return sol
 
 
 def solve_ODGP_with_parity(I, J, beta):
     p = beta.parity
-    sol = solve_ODGP((I - p) * SQRT2() / 2, (J - p) * (- SQRT2()) / 2)
+    sol = solve_ODGP((I - p) * SQRT2() / 2, (J - p) * (-SQRT2()) / 2)
     sol = map(lambda alpha: alpha * ZRootTwo(0, 1) + p, sol)
     return sol
 

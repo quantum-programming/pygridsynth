@@ -16,24 +16,69 @@ class Syllable(Enum):
 
 
 CONJ2_TABLE = [(0, 0), (0, 0), (1, 0), (3, 2), (2, 0), (2, 4), (3, 0), (1, 6)]
-CONJ3_TABLE = [(0, 0, 0, 0), (0, 0, 1, 0), (0, 0, 2, 0), (0, 0, 3, 0),
-               (0, 1, 0, 0), (0, 1, 1, 0), (0, 1, 2, 0), (0, 1, 3, 0),
-               (1, 0, 0, 0), (2, 0, 3, 6), (1, 1, 2, 2), (2, 1, 3, 6),
-               (1, 0, 2, 0), (2, 1, 1, 0), (1, 1, 0, 6), (2, 0, 1, 4),
-               (2, 0, 0, 0), (1, 1, 3, 4), (2, 1, 0, 0), (1, 0, 1, 2),
-               (2, 1, 2, 2), (1, 1, 1, 0), (2, 0, 2, 6), (1, 0, 3, 2)]
-CINV_TABLE = [(0, 0, 0, 0), (0, 0, 3, 0), (0, 0, 2, 0), (0, 0, 1, 0),
-              (0, 1, 0, 0), (0, 1, 1, 6), (0, 1, 2, 4), (0, 1, 3, 2),
-              (2, 0, 0, 0), (1, 0, 1, 2), (2, 1, 0, 0), (1, 1, 3, 4),
-              (2, 1, 1, 2), (1, 1, 1, 6), (2, 0, 2, 2), (1, 0, 3, 4),
-              (1, 0, 0, 0), (2, 1, 3, 6), (1, 1, 2, 2), (2, 0, 3, 6),
-              (1, 0, 2, 0), (2, 1, 1, 6), (1, 1, 0, 2), (2, 0, 1, 6)]
-TCONJ_TABLE = [(Axis.I, 0, 0), (Axis.I, 1, 7),
-               (Axis.H, 3, 3), (Axis.H, 2, 0),
-               (Axis.SH, 0, 5), (Axis.SH, 1, 4)]
+CONJ3_TABLE = [
+    (0, 0, 0, 0),
+    (0, 0, 1, 0),
+    (0, 0, 2, 0),
+    (0, 0, 3, 0),
+    (0, 1, 0, 0),
+    (0, 1, 1, 0),
+    (0, 1, 2, 0),
+    (0, 1, 3, 0),
+    (1, 0, 0, 0),
+    (2, 0, 3, 6),
+    (1, 1, 2, 2),
+    (2, 1, 3, 6),
+    (1, 0, 2, 0),
+    (2, 1, 1, 0),
+    (1, 1, 0, 6),
+    (2, 0, 1, 4),
+    (2, 0, 0, 0),
+    (1, 1, 3, 4),
+    (2, 1, 0, 0),
+    (1, 0, 1, 2),
+    (2, 1, 2, 2),
+    (1, 1, 1, 0),
+    (2, 0, 2, 6),
+    (1, 0, 3, 2),
+]
+CINV_TABLE = [
+    (0, 0, 0, 0),
+    (0, 0, 3, 0),
+    (0, 0, 2, 0),
+    (0, 0, 1, 0),
+    (0, 1, 0, 0),
+    (0, 1, 1, 6),
+    (0, 1, 2, 4),
+    (0, 1, 3, 2),
+    (2, 0, 0, 0),
+    (1, 0, 1, 2),
+    (2, 1, 0, 0),
+    (1, 1, 3, 4),
+    (2, 1, 1, 2),
+    (1, 1, 1, 6),
+    (2, 0, 2, 2),
+    (1, 0, 3, 4),
+    (1, 0, 0, 0),
+    (2, 1, 3, 6),
+    (1, 1, 2, 2),
+    (2, 0, 3, 6),
+    (1, 0, 2, 0),
+    (2, 1, 1, 6),
+    (1, 1, 0, 2),
+    (2, 0, 1, 6),
+]
+TCONJ_TABLE = [
+    (Axis.I, 0, 0),
+    (Axis.I, 1, 7),
+    (Axis.H, 3, 3),
+    (Axis.H, 2, 0),
+    (Axis.SH, 0, 5),
+    (Axis.SH, 1, 4),
+]
 
 
-class Clifford():
+class Clifford:
     def __init__(self, a, b, c, d):
         if a >= 3 or a < 0:
             a %= 3
@@ -98,8 +143,12 @@ class Clifford():
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return (self._a == other.a and self._b == other.b
-                    and self._c == other.c and self._d == other.d)
+            return (
+                self._a == other.a
+                and self._b == other.b
+                and self._c == other.c
+                and self._d == other.d
+            )
         else:
             return False
 
@@ -164,7 +213,7 @@ class Clifford():
         return circuit
 
 
-class NormalForm():
+class NormalForm:
     def __init__(self, syllables, c, phase=0):
         self._syllables = syllables
         self._c = c
@@ -191,7 +240,9 @@ class NormalForm():
         self._phase = phase
 
     def __repr__(self):
-        return f"NormalForm({repr(self._syllables)}, {repr(self._c)}, {repr(self._phase)})"
+        return (
+            f"NormalForm({repr(self._syllables)}, {repr(self._c)}, {repr(self._phase)})"
+        )
 
     def _append_gate(self, g):
         if isinstance(g, TGate):

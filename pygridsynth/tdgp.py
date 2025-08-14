@@ -1,13 +1,23 @@
 import itertools
 
-from .ring import DRootTwo, DOmega
-from .region import Interval
-from .odgp import solve_scaled_ODGP, solve_scaled_ODGP_with_parity
 from .myplot import plot_sol
+from .odgp import solve_scaled_ODGP, solve_scaled_ODGP_with_parity
+from .region import Interval
+from .ring import DOmega, DRootTwo
 
 
-def solve_TDGP(setA, setB, opG, ellipseA_upright, ellipseB_upright, bboxA, bboxB, k,
-               verbose=False, show_graph=False):
+def solve_TDGP(
+    setA,
+    setB,
+    opG,
+    ellipseA_upright,
+    ellipseB_upright,
+    bboxA,
+    bboxB,
+    k,
+    verbose=False,
+    show_graph=False,
+):
     sol_sufficient = iter([])
     sol_x = solve_scaled_ODGP(bboxA.I_x, bboxB.I_x, k + 1)
     try:
@@ -15,9 +25,11 @@ def solve_TDGP(setA, setB, opG, ellipseA_upright, ellipseB_upright, bboxA, bboxB
     except StopIteration:
         return iter([])
 
-    sol_y = solve_scaled_ODGP(bboxA.I_y.fatten(bboxA.I_y.width * 1e-4),
-                              bboxB.I_y.fatten(bboxB.I_y.width * 1e-4),
-                              k + 1)
+    sol_y = solve_scaled_ODGP(
+        bboxA.I_y.fatten(bboxA.I_y.width * 1e-4),
+        bboxB.I_y.fatten(bboxB.I_y.width * 1e-4),
+        k + 1,
+    )
 
     def gen_sol_sufficient(beta):
         dx = DRootTwo.power_of_inv_sqrt2(k)
@@ -43,7 +55,14 @@ def solve_TDGP(setA, setB, opG, ellipseA_upright, ellipseB_upright, bboxA, bboxB
     sol = filter(lambda z: setA.inside(z) and setB.inside(z.conj_sq2), sol_transformed)
 
     if show_graph:
-        plot_sol([sol_transformed, sol], setA.ellipse, setB.ellipse, None, None,
-                 color_list=['limegreen', 'blue'], size_list=[5, 10])
+        plot_sol(
+            [sol_transformed, sol],
+            setA.ellipse,
+            setB.ellipse,
+            None,
+            None,
+            color_list=["limegreen", "blue"],
+            size_list=[5, 10],
+        )
 
     return sol
