@@ -5,10 +5,10 @@ import mpmath
 from .diophantine import NO_SOLUTION, diophantine_dyadic
 from .loop_controller import LoopController
 from .mymath import solve_quadratic, sqrt
+from .quantum_gate import Rz
 from .region import ConvexSet, Ellipse
 from .ring import DRootTwo
 from .synthesis_of_cliffordT import decompose_domega_unitary
-from .quantum_gate import Rz
 from .tdgp import solve_TDGP
 from .to_upright import to_upright_set_pair
 from .unitary import DOmegaUnitary

@@ -1,5 +1,6 @@
 from enum import Enum
-from .quantum_gate import QuantumCircuit, HGate, TGate, SGate, SXGate, WGate
+
+from .quantum_gate import HGate, QuantumCircuit, SGate, SXGate, TGate, WGate
 
 
 class Axis(Enum):

@@ -2,8 +2,8 @@ from functools import cached_property
 
 import mpmath
 
+from .quantum_gate import HGate, SGate, SXGate, TGate, WGate
 from .ring import DOmega
-from .quantum_gate import HGate, TGate, SGate, SXGate, WGate
 
 
 class DOmegaUnitary:
