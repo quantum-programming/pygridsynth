@@ -71,7 +71,7 @@ python -m pygridsynth <theta> <epsilon> [options]
 - `--ftimeout`, `-ft`: Maximum milliseconds allowed for a single integer factoring attempt.
 - `--dloop`, `-dl`: Maximum number of failed integer factoring attempts allowed during Diophantine equation solving (default: `2000`).
 - `--floop`, `-fl`: Maximum number of failed integer factoring attempts allowed during the factoring process (default: `500`).
-- `--seed`: Random seed for deterministic results. (default: `0`)
+- `--seed`: Random seed for deterministic results.(default: `0`)
 - `--verbose`, `-v`: Enables detailed output.
 - `--time`, `-t`: Measures the execution time.
 - `--showgraph`, `-g`: Displays the decomposition result as a graph.
