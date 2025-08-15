@@ -1,13 +1,9 @@
-import os
-import sys
 from unittest.mock import patch
 
 import mpmath
 import pytest
 
 from pygridsynth.__main__ import main
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
 def test_main_deterministic_results():

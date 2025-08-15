@@ -91,6 +91,7 @@ This command will:
 
 You can also use `pygridsynth` directly in your scripts:
 
+<!-- mpf -->
 ```python
 import mpmath
 
