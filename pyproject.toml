@@ -43,6 +43,15 @@ python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
+pythonpath = ["."]
+
+[tool.isort]
+profile = "black"
+
+[tool.flake8]
+max-line-length = 80
+extend-select = "B950"
+extend-ignore = "E203,E501,E701"
 
 [dependency-groups]
 dev = [

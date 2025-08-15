@@ -3,6 +3,7 @@ repos:
     rev: 24.10.0
     hooks:
       - id: black
+  # https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:
@@ -17,8 +18,9 @@ repos:
           # E203 whitespace before ':'
           # E741 ambiguous variable name 'I'
           # W503 line break before binary operator
-          - "--max-line-length=88"
-          - "--ignore=E203,E741,W503"
+          - "--max-line-length=80"
+          - "--select=B950"
+          - "--ignore=E203,E501,E741,E701,W503"
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: 'v1.15.0'
     hooks:
