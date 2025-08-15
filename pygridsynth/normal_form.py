@@ -1,5 +1,7 @@
 from enum import Enum
 
+from .quantum_gate import HGate, QuantumCircuit, SGate, SXGate, TGate, WGate
+
 
 class Axis(Enum):
     I = 0
@@ -127,6 +129,19 @@ class Clifford:
         else:
             raise ValueError
 
+    @classmethod
+    def from_gate(cls, g):
+        if isinstance(g, HGate):
+            return CLIFFORD_H
+        elif isinstance(g, SGate):
+            return CLIFFORD_S
+        elif isinstance(g, SXGate):
+            return CLIFFORD_X
+        elif isinstance(g, WGate):
+            return CLIFFORD_W
+        else:
+            raise ValueError
+
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return (
@@ -182,15 +197,28 @@ class Clifford:
         axis, c1, d1 = self.__class__._tconj(self._a, self._b)
         return axis, self.__class__(0, self._b, c1 + self._c, d1 + self._d)
 
-    def to_gates(self):
+    def to_circuit(self, wires):
         axis, c = self.decompose_coset()
-        return ("" if axis == Axis.I else axis.name) + "X" * c.b + "S" * c.c + "W" * c.d
+        circuit = QuantumCircuit()
+        if axis == Axis.H:
+            circuit.append(HGate(target_qubit=wires[0]))
+        elif axis == Axis.SH:
+            circuit.append(SGate(target_qubit=wires[0]))
+            circuit.append(HGate(target_qubit=wires[0]))
+        for _ in range(c.b):
+            circuit.append(SXGate(target_qubit=wires[0]))
+        for _ in range(c.c):
+            circuit.append(SGate(target_qubit=wires[0]))
+        for _ in range(c.d):
+            circuit.append(WGate())
+        return circuit
 
 
 class NormalForm:
-    def __init__(self, syllables, c):
+    def __init__(self, syllables, c, phase=0):
         self._syllables = syllables
         self._c = c
+        self._phase = phase
 
     @property
     def syllables(self):
@@ -204,13 +232,21 @@ class NormalForm:
     def c(self, c):
         self._c = c
 
+    @property
+    def phase(self):
+        return self._phase
+
+    @phase.setter
+    def phase(self, phase):
+        self._phase = phase
+
     def __repr__(self):
-        return f"NormalForm({repr(self._syllables)}, {repr(self._c)})"
+        return (
+            f"NormalForm({repr(self._syllables)}, {repr(self._c)}, {repr(self._phase)})"
+        )
 
     def _append_gate(self, g):
-        if g in ["H", "S", "X", "W"]:
-            self.c *= Clifford.from_str(g)
-        elif g == "T":
+        if isinstance(g, TGate):
             axis, new_c = self.c.decompose_tconj()
             if axis == Axis.I:
                 if len(self._syllables) == 0:
@@ -230,21 +266,30 @@ class NormalForm:
             elif axis == Axis.SH:
                 self._syllables.append(Syllable.SHT)
                 self.c = new_c
+        else:
+            self.c *= Clifford.from_gate(g)
 
     @classmethod
-    def from_gates(cls, gates):
-        normal_form = NormalForm([], CLIFFORD_I)
-        for g in gates:
+    def from_circuit(cls, circuit):
+        normal_form = NormalForm([], CLIFFORD_I, phase=circuit.phase)
+        for g in circuit:
             normal_form._append_gate(g)
         return normal_form
 
-    def to_gates(self):
-        gates = ""
+    def to_circuit(self, wires):
+        circuit = QuantumCircuit(phase=self.phase)
         for syllable in self._syllables:
-            if syllable != Syllable.I:
-                gates += syllable.name
-        gates += self._c.to_gates()
-        return "I" if gates == "" else gates
+            if syllable == Syllable.T:
+                circuit.append(TGate(target_qubit=wires[0]))
+            elif syllable == Syllable.HT:
+                circuit.append(HGate(target_qubit=wires[0]))
+                circuit.append(TGate(target_qubit=wires[0]))
+            elif syllable == Syllable.SHT:
+                circuit.append(SGate(target_qubit=wires[0]))
+                circuit.append(HGate(target_qubit=wires[0]))
+                circuit.append(TGate(target_qubit=wires[0]))
+        circuit += self._c.to_circuit(wires=wires)
+        return circuit
 
 
 CLIFFORD_I = Clifford(0, 0, 0, 0)
