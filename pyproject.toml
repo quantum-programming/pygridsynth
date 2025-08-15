@@ -2,7 +2,7 @@
 name = "pygridsynth"
 version = "1.1.0"
 authors = [{ name="Shuntaro Yamamoto", email="shun0923@g.ecc.u-tokyo.ac.jp" }, { name="Nobuyuki Yoshioka", email="nyoshioka@g.ecc.u-tokyo.ac.jp" }]
-description = "Python version of the gridsynth program that computes approximations of z-rotations over the Clifford+T gate set."
+description = "Python version gridsynth program computes approximations of Z-rotations over the Clifford+T gate set"
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.8"
@@ -14,14 +14,38 @@ classifiers = [
 
 dependencies = [
     "mpmath",
+    "setuptools",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "flake8",
+    "mypy",
+    "black",
+    "isort"
 ]
 
 [tool.setuptools]
 packages = ["pygridsynth"]
 
 [project.scripts]
-pygridsynth = "pygridsynth:main"
+pygridsynth = "pygridsynth.cli:main"
 
 [project.urls]
 "Homepage" = "https://github.com/quantum-programming/pygridsynth"
 "Bug Tracker" = "https://github.com/quantum-programming/pygridsynth/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=3.5.0",
+    "pytest>=8.3.5",
+]

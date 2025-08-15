@@ -66,9 +66,12 @@ python -m pygridsynth <theta> <epsilon> [options]
 
 ### Options
 
-- `--dps`: Sets the calculation precision (default: `128`).
-- `--dtimeout`, `-dt`: Sets the timeout for solving diophantine equations in milliseconds (default: `200`).
-- `--ftimeout`, `-ft`: Sets the timeout for factorization in milliseconds (default: `50`).
+- `--dps`: Sets the working precision of the calculation. If not specified, the working precision will be calculated from `epsilon`.
+- `--dtimeout`, `-dt`: Maximum milliseconds allowed for a single Diophantine equation solving.
+- `--ftimeout`, `-ft`: Maximum milliseconds allowed for a single integer factoring attempt.
+- `--dloop`, `-dl`: Maximum number of failed integer factoring attempts allowed during Diophantine equation solving (default: `2000`).
+- `--floop`, `-fl`: Maximum number of failed integer factoring attempts allowed during the factoring process (default: `500`).
+- `--seed`: Random seed for deterministic results.(default: `0`)
 - `--verbose`, `-v`: Enables detailed output.
 - `--time`, `-t`: Measures the execution time.
 - `--showgraph`, `-g`: Displays the decomposition result as a graph.
@@ -76,7 +79,7 @@ python -m pygridsynth <theta> <epsilon> [options]
 ### Example Execution
 
 ```bash
-python -m pygridsynth 0.5 1e-50 --dps 256 --verbose --time
+python -m pygridsynth 0.5 1e-50 --verbose --time
 ```
 
 This command will:
@@ -89,8 +92,9 @@ This command will:
 You can also use `pygridsynth` directly in your scripts:
 
 ```python
-from pygridsynth.gridsynth import gridsynth_gates
 import mpmath
+
+from pygridsynth.gridsynth import gridsynth_gates
 
 mpmath.mp.dps = 128
 theta = mpmath.mpmathify("0.5")

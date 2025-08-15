@@ -1,23 +1,31 @@
-import warnings
-import numbers
 import math
+import numbers
 import random
-import time
+import warnings
 
-from .ring import ZRootTwo, ZOmega, DOmega
+from pygridsynth.loop_controller import LoopController
+
+from .ring import DOmega, ZOmega, ZRootTwo
 
 NO_SOLUTION = "no solution"
 
+rng = random.Random(0)
 
-def _find_factor(n, factoring_timeout, M=128):
+
+def set_random_seed(seed):
+    global rng
+    rng = random.Random(seed)
+
+
+def _find_factor(n, loop_controller: LoopController, M=128):
     if not (n & 1) and n > 2:
         return 2
 
-    a = random.randint(1, n)
+    a = rng.randint(1, n)
     y, r, k = a, 1, 0
     L = int(10 ** (len(str(n)) / 4) * 1.1774 + 10)
 
-    start_factoring = time.time()
+    loop_controller.start_factoring()
     while True:
         x = y + n
         while k < r:
@@ -39,14 +47,16 @@ def _find_factor(n, factoring_timeout, M=128):
                         if g != 1:
                             break
                 return None if g == n else g
-            if k >= L or (time.time() - start_factoring) * 1000 >= factoring_timeout:
+            if k >= L and not loop_controller.check_factoring_continue():
                 return None
         r <<= 1
+
+    return None
 
 
 def _sqrt_negative_one(p, L=100):
     for _ in range(L):
-        b = random.randint(1, p - 1)
+        b = rng.randint(1, p - 1)
         h = pow(b, (p - 1) >> 2, p)
         r = h * h % p
         if r == p - 1:
@@ -55,7 +65,7 @@ def _sqrt_negative_one(p, L=100):
             return None
 
 
-class F_p2():
+class F_p2:
     base = 0
     p = 0
 
@@ -77,7 +87,10 @@ class F_p2():
 
     def __mul__(self, other):
         if isinstance(other, self.__class__):
-            new_a = self._a * other.a + self._b * other.b % self.__class__.p * self.__class__.base
+            new_a = (
+                self._a * other.a
+                + self._b * other.b % self.__class__.p * self.__class__.base
+            )
             new_b = self._a * other.b + self._b * other.a
             return self.__class__(new_a, new_b)
         else:
@@ -88,6 +101,7 @@ class F_p2():
             if other < 0:
                 return NotImplemented
             else:
+                other = int(other)
                 new = self.__class__(1, 0)
                 tmp = self
                 while other > 0:
@@ -112,7 +126,7 @@ def _root_mod(x, p, L=100):
         return None
 
     for _ in range(L):
-        b = random.randint(1, p - 1)
+        b = rng.randint(1, p - 1)
         r = pow(b, p - 1, p)
         if r != 1:
             return None
@@ -137,7 +151,7 @@ def _is_prime(n, L=4):
         r += 1
         d >>= 1
     for _ in range(L):
-        a = random.randint(1, n - 1)
+        a = rng.randint(1, n - 1)
         a = pow(a, d, n)
         if a == 1:
             return True
@@ -237,10 +251,10 @@ def _adj_decompose_int_prime_power(p, k):
         if t is None or t == NO_SOLUTION:
             return t
         else:
-            return t ** k
+            return t**k
 
 
-def _adj_decompose_int(n, diophantine_timeout, factoring_timeout, start_time):
+def _adj_decompose_int(n, loop_controller: LoopController):
     if n < 0:
         n = -n
     facs = [(n, 1)]
@@ -251,10 +265,10 @@ def _adj_decompose_int(n, diophantine_timeout, factoring_timeout, start_time):
         if t_p == NO_SOLUTION:
             return NO_SOLUTION
         elif t_p is None:
-            fac = _find_factor(p, factoring_timeout)
+            fac = _find_factor(p, loop_controller)
             if fac is None:
                 facs.append((p, k))
-                if (time.time() - start_time) * 1000 >= diophantine_timeout:
+                if not loop_controller.check_diophantine_continue():
                     return NO_SOLUTION
             else:
                 facs.append((p // fac, k))
@@ -265,14 +279,14 @@ def _adj_decompose_int(n, diophantine_timeout, factoring_timeout, start_time):
     return t
 
 
-def _adj_decompose_selfassociate(xi, diophantine_timeout, factoring_timeout, start_time):
+def _adj_decompose_selfassociate(xi, loop_controller: LoopController):
     # xi \sim xi.conj_sq2
     if xi == 0:
         return ZOmega.from_int(0)
 
     n = math.gcd(xi.a, xi.b)
     r = xi // n
-    t1 = _adj_decompose_int(n, diophantine_timeout, factoring_timeout, start_time)
+    t1 = _adj_decompose_int(n, loop_controller)
     t2 = ZOmega(0, 0, 1, 1) if r % ZRootTwo(0, 1) == 0 else 1
     if t1 is None:
         return None
@@ -292,7 +306,7 @@ def _decompose_relatively_zomega_prime(partial_facs):
         while True:
             if i >= len(facs):
                 if ZRootTwo.sim(b, 1):
-                    u *= b ** k_b
+                    u *= b**k_b
                 else:
                     facs.append((b, k_b))
                 break
@@ -370,10 +384,10 @@ def _adj_decompose_zomega_prime_power(eta, k):
         if t is None or t == NO_SOLUTION:
             return t
         else:
-            return t ** k
+            return t**k
 
 
-def _adj_decompose_selfcoprime(xi, diophantine_timeout, factoring_timeout, start_time):
+def _adj_decompose_selfcoprime(xi, loop_controller: LoopController):
     # gcd(xi, xi.conj_sq2) = 1
     facs = [(xi, 1)]
     t = ZOmega.from_int(1)
@@ -386,10 +400,10 @@ def _adj_decompose_selfcoprime(xi, diophantine_timeout, factoring_timeout, start
             n = eta.norm
             if n < 0:
                 n = -n
-            fac_n = _find_factor(n, factoring_timeout)
+            fac_n = _find_factor(n, loop_controller)
             if fac_n is None:
                 facs.append((eta, k))
-                if (time.time() - start_time) * 1000 >= diophantine_timeout:
+                if not loop_controller.check_diophantine_continue():
                     return NO_SOLUTION
             else:
                 fac = ZRootTwo.gcd(xi, fac_n)
@@ -401,30 +415,32 @@ def _adj_decompose_selfcoprime(xi, diophantine_timeout, factoring_timeout, start
     return t
 
 
-def _adj_decompose(xi, diophantine_timeout, factoring_timeout, start_time):
+def _adj_decompose(xi, loop_controller: LoopController):
     if xi == 0:
         return ZOmega.from_int(0)
 
     d = ZRootTwo.gcd(xi, xi.conj_sq2)
     eta = xi // d
-    t1 = _adj_decompose_selfassociate(d, diophantine_timeout, factoring_timeout, start_time)
+    t1 = _adj_decompose_selfassociate(d, loop_controller)
     if t1 == NO_SOLUTION:
         return NO_SOLUTION
     else:
-        t2 = _adj_decompose_selfcoprime(eta, diophantine_timeout, factoring_timeout, start_time)
+        t2 = _adj_decompose_selfcoprime(eta, loop_controller)
         if t2 == NO_SOLUTION:
             return NO_SOLUTION
         else:
             return t1 * t2
 
 
-def _diophantine(xi, diophantine_timeout, factoring_timeout, start_time):
+def _diophantine(xi, loop_controller: LoopController):
+    loop_controller.start_diophantine()
+
     if xi == 0:
         return ZOmega.from_int(0)
     elif xi < 0 or xi.conj_sq2 < 0:
         return NO_SOLUTION
 
-    t = _adj_decompose(xi, diophantine_timeout, factoring_timeout, start_time)
+    t = _adj_decompose(xi, loop_controller)
     if t == NO_SOLUTION:
         return NO_SOLUTION
     else:
@@ -438,12 +454,16 @@ def _diophantine(xi, diophantine_timeout, factoring_timeout, start_time):
             return v * t
 
 
-def diophantine_dyadic(xi, diophantine_timeout=200, factoring_timeout=50):
+def diophantine_dyadic(xi, loop_controller=None):
+    if loop_controller is None:
+        loop_controller = LoopController()
+
     k_div_2, k_mod_2 = xi.k >> 1, xi.k & 1
 
-    t = _diophantine(xi.alpha * ZRootTwo(1, 1) if k_mod_2 else xi.alpha,
-                     diophantine_timeout=diophantine_timeout, factoring_timeout=factoring_timeout,
-                     start_time=time.time())
+    t = _diophantine(
+        xi.alpha * ZRootTwo(1, 1) if k_mod_2 else xi.alpha,
+        loop_controller=loop_controller,
+    )
     if t == NO_SOLUTION:
         return NO_SOLUTION
     else:

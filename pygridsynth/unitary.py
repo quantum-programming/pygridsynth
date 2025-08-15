@@ -1,10 +1,12 @@
 from functools import cached_property
+
 import mpmath
 
+from .quantum_gate import HGate, SGate, SXGate, TGate, WGate
 from .ring import DOmega
 
 
-class DOmegaUnitary():
+class DOmegaUnitary:
     def __init__(self, z, w, n, k=None):
         if n >= 8 or n < 0:
             n &= 0b111
@@ -38,13 +40,25 @@ class DOmegaUnitary():
 
     @cached_property
     def to_matrix(self):
-        return [[self._z, -self._w.conj.mul_by_omega_power(self._n)],
-                [self._w, self._z.conj.mul_by_omega_power(self._n)]]
+        return [
+            [self._z, -self._w.conj.mul_by_omega_power(self._n)],
+            [self._w, self._z.conj.mul_by_omega_power(self._n)],
+        ]
 
     @cached_property
     def to_complex_matrix(self):
-        return mpmath.matrix([[self._z.to_complex, -self._w.conj.mul_by_omega_power(self._n).to_complex],
-                              [self._w.to_complex, self._z.conj.mul_by_omega_power(self._n).to_complex]])
+        return mpmath.matrix(
+            [
+                [
+                    self._z.to_complex,
+                    -self._w.conj.mul_by_omega_power(self._n).to_complex,
+                ],
+                [
+                    self._w.to_complex,
+                    self._z.conj.mul_by_omega_power(self._n).to_complex,
+                ],
+            ]
+        )
 
     def __repr__(self):
         return f"DOmegaUnitary({repr(self._z)}, {repr(self._w)}, {self._n})"
@@ -75,7 +89,9 @@ class DOmegaUnitary():
     def mul_by_S_power_from_left(self, m):
         if m >= 4 or m < 0:
             m &= 0b11
-        return self.__class__(self._z, self._w.mul_by_omega_power(m << 1), self._n + (m << 1))
+        return self.__class__(
+            self._z, self._w.mul_by_omega_power(m << 1), self._n + (m << 1)
+        )
 
     def mul_by_H_from_left(self):
         new_z = (self._z + self._w).mul_by_inv_sqrt2()
@@ -89,13 +105,18 @@ class DOmegaUnitary():
         return self.__class__(self._w, self._z, self._n + 4)
 
     def mul_by_W_from_left(self):
-        return self.__class__(self._z.mul_by_omega(), self._w.mul_by_omega(), self._n + 2)
+        return self.__class__(
+            self._z.mul_by_omega(), self._w.mul_by_omega(), self._n + 2
+        )
 
     def mul_by_W_power_from_left(self, m):
         if m >= 8 or m < 0:
             m &= 0b111
-        return self.__class__(self._z.mul_by_omega_power(m), self._w.mul_by_omega_power(m),
-                              self._n + (m << 1))
+        return self.__class__(
+            self._z.mul_by_omega_power(m),
+            self._w.mul_by_omega_power(m),
+            self._n + (m << 1),
+        )
 
     def renew_denomexp(self, new_k):
         return self.__class__(self._z, self._w, self._n, new_k)
@@ -108,6 +129,24 @@ class DOmegaUnitary():
     @classmethod
     def identity(cls):
         return cls(DOmega.from_int(1), DOmega.from_int(0), 0)
+
+    @classmethod
+    def from_circuit(cls, circuit):
+        unitary = cls.identity()
+        for g in reversed(circuit):
+            if isinstance(g, HGate):
+                unitary = unitary.renew_denomexp(unitary.k + 1).mul_by_H_from_left()
+            elif isinstance(g, TGate):
+                unitary = unitary.mul_by_T_from_left()
+            elif isinstance(g, SGate):
+                unitary = unitary.mul_by_S_from_left()
+            elif isinstance(g, SXGate):
+                unitary = unitary.mul_by_X_from_left()
+            elif isinstance(g, WGate):
+                unitary = unitary.mul_by_W_from_left()
+            else:
+                raise ValueError
+        return unitary.reduce_denomexp()
 
     @classmethod
     def from_gates(cls, gates):
@@ -123,4 +162,6 @@ class DOmegaUnitary():
                 unitary = unitary.mul_by_X_from_left()
             elif g == "W":
                 unitary = unitary.mul_by_W_from_left()
+            else:
+                raise ValueError
         return unitary.reduce_denomexp()

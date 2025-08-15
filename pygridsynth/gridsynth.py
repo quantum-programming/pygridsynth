@@ -1,29 +1,32 @@
-import mpmath
 import time
 import warnings
 
-from .mymath import sqrt, solve_quadratic
-from .ring import DRootTwo
-from .region import Ellipse, ConvexSet
-from .to_upright import to_upright_set_pair
-from .tdgp import solve_TDGP
+import mpmath
+
 from .diophantine import NO_SOLUTION, diophantine_dyadic
-from .unitary import DOmegaUnitary
+from .loop_controller import LoopController
+from .mymath import solve_quadratic, sqrt
+from .quantum_gate import Rz
+from .region import ConvexSet, Ellipse
+from .ring import DRootTwo
 from .synthesis_of_cliffordT import decompose_domega_unitary
+from .tdgp import solve_TDGP
+from .to_upright import to_upright_set_pair
+from .unitary import DOmegaUnitary
 
 
 class EpsilonRegion(ConvexSet):
     def __init__(self, theta, epsilon):
         self._theta = theta
         self._epsilon = epsilon
-        self._d = 1 - epsilon ** 2 / 2
+        self._d = sqrt(1 - epsilon**2 / 4)
         self._z_x = mpmath.cos(-theta / 2)
         self._z_y = mpmath.sin(-theta / 2)
         D_1 = mpmath.matrix([[self._z_x, -self._z_y], [self._z_y, self._z_x]])
-        D_2 = mpmath.matrix([[4 * (1 / epsilon) ** 4, 0], [0, (1 / epsilon) ** 2]])
+        D_2 = mpmath.matrix([[64 * (1 / epsilon) ** 4, 0], [0, 4 * (1 / epsilon) ** 2]])
         D_3 = mpmath.matrix([[self._z_x, self._z_y], [-self._z_y, self._z_x]])
         p = mpmath.matrix([self._d * self._z_x, self._d * self._z_y])
-        ellipse = Ellipse(D_1 * D_2 * D_3, p)
+        ellipse = Ellipse(D_1 @ D_2 @ D_3, p)
         super().__init__(ellipse)
 
     @property
@@ -35,7 +38,7 @@ class EpsilonRegion(ConvexSet):
         return self._epsilon
 
     def inside(self, u):
-        cos_similarity = (self._z_x * u.real + self._z_y * u.imag)
+        cos_similarity = self._z_x * u.real + self._z_y * u.imag
         return DRootTwo.fromDOmega(u.conj * u) <= 1 and cos_similarity >= self._d
 
     def intersect(self, u0, v):
@@ -76,81 +79,92 @@ class UnitDisk(ConvexSet):
 
 def generate_complex_unitary(sol):
     u, t = sol
-    return mpmath.matrix([[u.to_complex, -t.conj.to_complex],
-                          [t.to_complex, u.conj.to_complex]])
-
-
-def generate_target_Rz(theta):
-    return mpmath.matrix([[mpmath.exp(- 1.j * theta / 2), 0],
-                          [0, mpmath.exp(1.j * theta / 2)]])
+    return mpmath.matrix(
+        [[u.to_complex, -t.conj.to_complex], [t.to_complex, u.conj.to_complex]]
+    )
 
 
 def error(theta, gates):
     tcount = gates.count("T")
-    epsilon = 2 ** (-tcount//3)
+    epsilon = 2 ** (-tcount // 3)
     dps = _dps_for_epsilon(epsilon)
     with mpmath.workdps(dps):
-        Rz = generate_target_Rz(mpmath.mpmathify(f"{theta}"))
-        U = DOmegaUnitary.from_gates(gates).to_complex_matrix
-        E = U - Rz
-        return sqrt(mpmath.fabs(E[0, 0] * E[1, 1] - E[0, 1] * E[1, 0]))
+        u_target = Rz(theta)
+        u_approx = DOmegaUnitary.from_gates(gates).to_complex_matrix
+        return 2 * sqrt(
+            mpmath.re(1 - mpmath.re(mpmath.conj(u_target[0, 0]) * u_approx[0, 0]) ** 2)
+        )
 
 
 def check(theta, gates):
     t_count = gates.count("T")
     h_count = gates.count("H")
-    U_decomp = DOmegaUnitary.from_gates(gates)
-    # Rz = generate_target_Rz(theta)
-    # U = U_decomp.to_complex_matrix
+    u_approx = DOmegaUnitary.from_gates(gates)
     e = error(theta, gates)
     print(f"{gates=}")
     print(f"{t_count=}, {h_count=}")
-    # print(f"{Rz=}")
-    print(f"U_decomp={U_decomp.to_matrix}")
-    # print(f"{U=}")
+    print(f"u_approx={u_approx.to_matrix}")
     print(f"{e=}")
+
 
 def get_synthesized_unitary(gates):
     tcount = gates.count("T")
-    epsilon = 2 ** (-tcount//3)
+    epsilon = 2 ** (-tcount // 3)
     dps = _dps_for_epsilon(epsilon)
     with mpmath.workdps(dps):
         return DOmegaUnitary.from_gates(gates).to_complex_matrix
 
 
-def gridsynth(theta:mpmath.mpf, epsilon:mpmath.mpf, dps=None,
-              diophantine_timeout=1.0, factoring_timeout=1.0,
-              verbose=False, measure_time=False, show_graph=False):
+def gridsynth(
+    theta,
+    epsilon,
+    dps=None,
+    loop_controller=None,
+    verbose=False,
+    measure_time=False,
+    show_graph=False,
+):
     if isinstance(theta, float):
         warnings.warn(
-            f"pygridsynth is synthesizing the angle {theta}, please verify if this is the intended value. "
-            "Float values may introduce unintended precision errors. Consider using mpmath.mpf for exact precision.",
+            (
+                f"pygridsynth is synthesizing the angle {theta}. "
+                "Please verify that this is the intended value. "
+                "Using float may introduce precision errors; "
+                "consider using mpmath.mpf for exact precision."
+            ),
             UserWarning,
-            stacklevel=2
+            stacklevel=2,
         )
+
     if isinstance(epsilon, float):
         warnings.warn(
-            f"pygridsynth is synthesizing the epsilon {epsilon}, please verify if this is the intended value. "
-            "Float values may introduce unintended precision errors. Consider using mpmath.mpf for exact precision.",
+            (
+                f"pygridsynth is using epsilon={epsilon} as the tolerance. "
+                "Please verify that this is the intended value. "
+                "Using float may introduce precision errors; "
+                "consider using mpmath.mpf for exact precision."
+            ),
             UserWarning,
-            stacklevel=2
+            stacklevel=2,
         )
-    
+
     if dps is None:
         dps = _dps_for_epsilon(epsilon)
     with mpmath.workdps(dps):
         theta = mpmath.mpmathify(theta)
         epsilon = mpmath.mpmathify(epsilon)
+        if loop_controller is None:
+            loop_controller = LoopController()
 
         epsilon_region = EpsilonRegion(theta, epsilon)
         unit_disk = UnitDisk()
         k = 0
-        
 
         if measure_time:
             start = time.time()
-        transformed = to_upright_set_pair(epsilon_region, unit_disk,
-                                        verbose=verbose, show_graph=show_graph)
+        transformed = to_upright_set_pair(
+            epsilon_region, unit_disk, verbose=verbose, show_graph=show_graph
+        )
         if measure_time:
             print(f"to_upright_set_pair: {time.time() - start} s")
         if verbose:
@@ -161,8 +175,14 @@ def gridsynth(theta:mpmath.mpf, epsilon:mpmath.mpf, dps=None,
         while True:
             if measure_time:
                 start = time.time()
-            sol = solve_TDGP(epsilon_region, unit_disk, *transformed, k,
-                            verbose=verbose, show_graph=show_graph)
+            sol = solve_TDGP(
+                epsilon_region,
+                unit_disk,
+                *transformed,
+                k,
+                verbose=verbose,
+                show_graph=show_graph,
+            )
             if measure_time:
                 time_of_solve_TDGP += time.time() - start
                 start = time.time()
@@ -171,9 +191,7 @@ def gridsynth(theta:mpmath.mpf, epsilon:mpmath.mpf, dps=None,
                 if (z * z.conj).residue == 0:
                     continue
                 xi = 1 - DRootTwo.fromDOmega(z.conj * z)
-                w = diophantine_dyadic(xi,
-                                    diophantine_timeout=diophantine_timeout,
-                                    factoring_timeout=factoring_timeout)
+                w = diophantine_dyadic(xi, loop_controller=loop_controller)
                 if w != NO_SOLUTION:
                     z = z.reduce_denomexp()
                     w = w.reduce_denomexp()
@@ -188,7 +206,10 @@ def gridsynth(theta:mpmath.mpf, epsilon:mpmath.mpf, dps=None,
                     if measure_time:
                         time_of_diophantine_dyadic += time.time() - start
                         print(f"time of solve_TDGP: {time_of_solve_TDGP * 1000} ms")
-                        print(f"time of diophantine_dyadic: {time_of_diophantine_dyadic * 1000} ms")
+                        print(
+                            "time of diophantine_dyadic: "
+                            f"{time_of_diophantine_dyadic * 1000} ms"
+                        )
                     if verbose:
                         print(f"{z=}, {w=}")
                         print("------------------")
@@ -198,45 +219,124 @@ def gridsynth(theta:mpmath.mpf, epsilon:mpmath.mpf, dps=None,
             k += 1
 
 
-def gridsynth_gates(theta, epsilon, dps=None,
-                    diophantine_timeout= 1.0, factoring_timeout= 1.0,
-                    verbose=False, measure_time=False, show_graph=False):
+def gridsynth_circuit(
+    theta,
+    epsilon,
+    wires=[0],
+    decompose_phase_gate=True,
+    dps=None,
+    loop_controller=None,
+    verbose=False,
+    measure_time=False,
+    show_graph=False,
+):
     if isinstance(theta, float):
         warnings.warn(
-            f"pygridsynth is synthesizing the angle {theta}, please verify if this is the intended value. "
-            "Float values may introduce unintended precision errors. Consider using mpmath.mpf for exact precision.",
+            (
+                f"pygridsynth is synthesizing the angle {theta}. "
+                "Please verify that this is the intended value. "
+                "Using float may introduce precision errors; "
+                "consider using mpmath.mpf for exact precision."
+            ),
             UserWarning,
-            stacklevel=2
+            stacklevel=2,
         )
+
     if isinstance(epsilon, float):
         warnings.warn(
-            f"pygridsynth is synthesizing the epsilon {epsilon}, please verify if this is the intended value. "
-            "Float values may introduce unintended precision errors. Consider using mpmath.mpf for exact precision.",
+            (
+                f"pygridsynth is using epsilon={epsilon} as the tolerance. "
+                "Please verify that this is the intended value. "
+                "Using float may introduce precision errors; "
+                "consider using mpmath.mpf for exact precision."
+            ),
             UserWarning,
-            stacklevel=2
+            stacklevel=2,
         )
-    
+
     if dps is None:
         dps = _dps_for_epsilon(epsilon)
     with mpmath.workdps(dps):
         theta = mpmath.mpmathify(theta)
         epsilon = mpmath.mpmathify(epsilon)
+        start_total = time.time() if measure_time else 0.0
+        u_approx = gridsynth(
+            theta=theta,
+            epsilon=epsilon,
+            dps=dps,
+            loop_controller=loop_controller,
+            verbose=verbose,
+            measure_time=measure_time,
+            show_graph=show_graph,
+        )
 
+        start = time.time() if measure_time else 0.0
+        circuit = decompose_domega_unitary(
+            u_approx, wires=wires, decompose_phase_gate=decompose_phase_gate
+        )
         if measure_time:
-            start_total = time.time()
-        u_approx = gridsynth(theta=theta, epsilon=epsilon, dps=dps,
-                            diophantine_timeout=diophantine_timeout,
-                            factoring_timeout=factoring_timeout,
-                            verbose=verbose, measure_time=measure_time, show_graph=show_graph)
-        if measure_time:
-            start = time.time()
-        gates = decompose_domega_unitary(u_approx)
-        if measure_time:
-            print(f"time of decompose_domega_unitary: {(time.time() - start) * 1000} ms")
+            print(
+                f"time of decompose_domega_unitary: {(time.time() - start) * 1000} ms"
+            )
             print(f"total time: {(time.time() - start_total) * 1000} ms")
-        return gates
+
+        return circuit
+
+
+def gridsynth_gates(
+    theta,
+    epsilon,
+    decompose_phase_gate=True,
+    dps=None,
+    loop_controller=None,
+    verbose=False,
+    measure_time=False,
+    show_graph=False,
+):
+    if isinstance(theta, float):
+        warnings.warn(
+            (
+                f"pygridsynth is synthesizing the angle {theta}. "
+                "Please verify that this is the intended value. "
+                "Using float may introduce precision errors; "
+                "consider using mpmath.mpf for exact precision."
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+
+    if isinstance(epsilon, float):
+        warnings.warn(
+            (
+                f"pygridsynth is using epsilon={epsilon} as the tolerance. "
+                "Please verify that this is the intended value. "
+                "Using float may introduce precision errors; "
+                "consider using mpmath.mpf for exact precision."
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+
+    if dps is None:
+        dps = _dps_for_epsilon(epsilon)
+    with mpmath.workdps(dps):
+        theta = mpmath.mpmathify(theta)
+        epsilon = mpmath.mpmathify(epsilon)
+        circuit = gridsynth_circuit(
+            theta=theta,
+            epsilon=epsilon,
+            wires=[0],
+            decompose_phase_gate=decompose_phase_gate,
+            dps=dps,
+            loop_controller=loop_controller,
+            verbose=verbose,
+            measure_time=measure_time,
+            show_graph=show_graph,
+        )
+        return circuit.to_simple_str()
+
 
 def _dps_for_epsilon(epsilon) -> int:
     e = mpmath.mpmathify(epsilon)
     k = -mpmath.log10(e)
-    return 15 + 2.5*int(mpmath.ceil(k)) # used in newsynth
+    return int(15 + 2.5 * int(mpmath.ceil(k)))  # used in newsynth
