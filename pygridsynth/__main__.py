@@ -9,7 +9,7 @@ def main():
 
     parser.add_argument('theta', type=str)
     parser.add_argument('epsilon', type=str)
-    parser.add_argument('--dps', type=int, default=128)
+    parser.add_argument('--dps', type=int, default=None)
     parser.add_argument('--dtimeout', '-dt', type=int, default=200)
     parser.add_argument('--ftimeout', '-ft', type=int, default=50)
     parser.add_argument('--verbose', '-v', action='store_true')
@@ -17,12 +17,8 @@ def main():
     parser.add_argument('--showgraph', '-g', action='store_true')
 
     args = parser.parse_args()
-    mpmath.mp.dps = args.dps
-    mpmath.mp.pretty = True
-    theta = mpmath.mpmathify(args.theta)
-    epsilon = mpmath.mpmathify(args.epsilon)
 
-    gates = gridsynth_gates(theta=theta, epsilon=epsilon,
+    gates = gridsynth_gates(theta=args.theta, epsilon=args.epsilon, dps=args.dps,
                             factoring_timeout=args.ftimeout,
                             diophantine_timeout=args.dtimeout,
                             verbose=args.verbose, measure_time=args.time,
