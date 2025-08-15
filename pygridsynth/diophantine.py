@@ -26,7 +26,7 @@ def _find_factor(n, loop_controller: LoopController, M=128):
     L = int(10 ** (len(str(n)) / 4) * 1.1774 + 10)
 
     loop_controller.start_factoring()
-    while loop_controller.check_factoring_continue():
+    while True:
         x = y + n
         while k < r:
             q = 1
@@ -47,7 +47,7 @@ def _find_factor(n, loop_controller: LoopController, M=128):
                         if g != 1:
                             break
                 return None if g == n else g
-            if k >= L:
+            if k >= L and not loop_controller.check_factoring_continue():
                 return None
         r <<= 1
 
