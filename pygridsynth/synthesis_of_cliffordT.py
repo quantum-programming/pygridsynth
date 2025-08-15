@@ -1,8 +1,7 @@
 from .normal_form import NormalForm
+from .quantum_gate import W_PHASE, HGate, QuantumCircuit, SGate, SXGate, TGate, WGate
 from .ring import OMEGA_POWER
 from .unitary import DOmegaUnitary
-from .quantum_gate import W_PHASE, QuantumCircuit, HGate, TGate, SGate, SXGate, WGate
-
 
 BIT_SHIFT = [0, 0, 1, 0, 2, 0, 1, 3, 3, 3, 0, 2, 2, 1, 0, 0]
 BIT_COUNT = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4]

@@ -1,7 +1,5 @@
 import argparse
 
-import mpmath
-
 from .diophantine import set_random_seed
 from .gridsynth import gridsynth_gates
 from .loop_controller import LoopController
@@ -40,16 +38,6 @@ def main():
     # Set random seed for deterministic results
     set_random_seed(args.seed)
 
-    # Use the same heuristic as Haskell gridsynth for setting dps
-    if args.dps is None:
-        epsilon1 = mpmath.mpmathify(args.epsilon)
-        dps_of_result = -mpmath.log10(epsilon1)
-        args.dps = 15 + 2.5 * dps_of_result
-    mpmath.mp.dps = args.dps
-    epsilon = mpmath.mpmathify(args.epsilon)
-    mpmath.mp.pretty = True
-    theta = mpmath.mpmathify(args.theta)
-
     loop_controller = LoopController(
         dloop=args.dloop,
         floop=args.floop,
@@ -57,8 +45,9 @@ def main():
         ftimeout=args.ftimeout,
     )
     gates = gridsynth_gates(
-        theta=theta,
-        epsilon=epsilon,
+        theta=args.theta,
+        epsilon=args.epsilon,
+        dps=args.dps,
         loop_controller=loop_controller,
         verbose=args.verbose,
         measure_time=args.time,
