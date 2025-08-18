@@ -1,8 +1,6 @@
 import argparse
 
-from .diophantine import set_random_seed
 from .gridsynth import gridsynth_gates
-from .loop_controller import LoopController
 
 helps = {
     "dt": "Maximum milliseconds allowed for a single Diophantine equation solving",
@@ -27,28 +25,23 @@ def main():
     parser.add_argument("--dps", type=int, default=None)
     parser.add_argument("--dtimeout", "-dt", type=float, default=None, help=helps["dt"])
     parser.add_argument("--ftimeout", "-ft", type=float, default=None, help=helps["ft"])
-    parser.add_argument("--dloop", "-dl", type=int, default=2000, help=helps["dl"])
-    parser.add_argument("--floop", "-fl", type=int, default=500, help=helps["fl"])
+    parser.add_argument("--dloop", "-dl", type=int, default=10, help=helps["dl"])
+    parser.add_argument("--floop", "-fl", type=int, default=10, help=helps["fl"])
     parser.add_argument("--seed", type=int, default=0, help=helps["seed"])
     parser.add_argument("--verbose", "-v", action="store_true")
     parser.add_argument("--time", "-t", action="store_true")
     parser.add_argument("--showgraph", "-g", action="store_true")
     args = parser.parse_args()
 
-    # Set random seed for deterministic results
-    set_random_seed(args.seed)
-
-    loop_controller = LoopController(
-        dloop=args.dloop,
-        floop=args.floop,
-        dtimeout=args.dtimeout,
-        ftimeout=args.ftimeout,
-    )
     gates = gridsynth_gates(
         theta=args.theta,
         epsilon=args.epsilon,
         dps=args.dps,
-        loop_controller=loop_controller,
+        dtimeout=args.dtimeout,
+        ftimeout=args.ftimeout,
+        dloop=args.dloop,
+        floop=args.floop,
+        seed=args.seed,
         verbose=args.verbose,
         measure_time=args.time,
         show_graph=args.showgraph,
