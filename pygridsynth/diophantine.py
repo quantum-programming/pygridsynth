@@ -47,7 +47,7 @@ def _find_factor(n, loop_controller: LoopController, M=128):
                         if g != 1:
                             break
                 return None if g == n else g
-            if k >= L and not loop_controller.check_factoring_continue():
+            if k >= L or not loop_controller.check_factoring_continue():
                 return None
         r <<= 1
 
