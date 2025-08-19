@@ -1,7 +1,6 @@
 import time
 
 import mpmath
-import numpy as np
 
 from pygridsynth import gridsynth_gates
 
@@ -11,7 +10,7 @@ def test_exec_time():
 
     for eps, TL in [(1e-30, 1), (1e-40, 1.25), (1e-50, 1.5)]:
         t0 = time.perf_counter()
-        dps = 15 + int(-np.log10(eps) * 2.5)
+        dps = 15 + int(-mpmath.log10(mpmath.mpmathify(eps)) * 2.5)
         mpmath.mp.dps = dps
         gates = gridsynth_gates(
             mpmath.mpmathify(theta), mpmath.mpmathify(eps), decompose_phase_gate=False
