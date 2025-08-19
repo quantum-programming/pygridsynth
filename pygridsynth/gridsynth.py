@@ -3,7 +3,7 @@ import warnings
 
 import mpmath
 
-from .diophantine import NO_SOLUTION, diophantine_dyadic
+from .diophantine import NO_SOLUTION, diophantine_dyadic, set_random_seed
 from .loop_controller import LoopController
 from .mymath import solve_quadratic, sqrt
 from .quantum_gate import Rz
@@ -286,12 +286,16 @@ def gridsynth_circuit(
 def gridsynth_gates(
     theta,
     epsilon,
-    decompose_phase_gate=True,
     dps=None,
-    loop_controller=None,
+    dtimeout=None,
+    ftimeout=None,
+    dloop=10,
+    floop=10,
+    seed=0,
     verbose=False,
     measure_time=False,
     show_graph=False,
+    decompose_phase_gate=True,
 ):
     if isinstance(theta, float):
         warnings.warn(
@@ -316,6 +320,12 @@ def gridsynth_gates(
             UserWarning,
             stacklevel=2,
         )
+
+    set_random_seed(seed)
+
+    loop_controller = LoopController(
+        dloop=dloop, floop=floop, dtimeout=dtimeout, ftimeout=ftimeout
+    )
 
     if dps is None:
         dps = _dps_for_epsilon(epsilon)

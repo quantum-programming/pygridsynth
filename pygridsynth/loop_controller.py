@@ -6,8 +6,8 @@ from typing import Optional
 class LoopController:
     def __init__(
         self,
-        dloop: int = 2000,
-        floop: int = 500,
+        dloop: int = 10,
+        floop: int = 10,
         dtimeout: Optional[float] = None,
         ftimeout: Optional[float] = None,
     ):
