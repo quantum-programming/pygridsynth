@@ -5,7 +5,7 @@ import mpmath
 from .quantum_gate import HGate, SGate, SXGate, TGate, WGate
 from .ring import DOmega
 
-
+# This class represents all unitary matrices with elements in D[omega].
 class DOmegaUnitary:
     def __init__(self, z, w, n, k=None):
         if n >= 8 or n < 0:
@@ -37,6 +37,10 @@ class DOmegaUnitary:
     @property
     def k(self):
         return self._w.k
+
+    @property
+    def det(self):
+        return DOmega.from_omega_power(self._n)
 
     @cached_property
     def to_matrix(self):

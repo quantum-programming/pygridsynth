@@ -122,3 +122,17 @@ def to_upright_set_pair(setA, setB, show_graph=False, verbose=False):
     if show_graph:
         plot_sol([], ellipseA_upright, ellipseB_upright, bboxA, bboxB)
     return opG, ellipseA_upright, ellipseB_upright, bboxA, bboxB
+
+def to_upright_set_pair_with_opG(setA, setB, opG, show_graph=False, verbose=False):
+    ellipse_pair = opG * EllipsePair(setA.ellipse, setB.ellipse)
+    ellipseA_upright = ellipse_pair.A
+    ellipseB_upright = ellipse_pair.B
+    bboxA = ellipseA_upright.bbox()
+    bboxB = ellipseB_upright.bbox()
+    upA = ellipseA_upright.area / bboxA.area
+    upB = ellipseB_upright.area / bboxB.area
+    if verbose:
+        print(f"{upA=}, {upB=}")
+    if show_graph:
+        plot_sol([], ellipseA_upright, ellipseB_upright, bboxA, bboxB)
+    return opG, ellipseA_upright, ellipseB_upright, bboxA, bboxB

@@ -477,6 +477,11 @@ class ZOmega:
     def from_zroottwo(cls, x):
         return cls(-x.b, 0, x.b, x.a)
 
+    @classmethod
+    def from_omega_power(cls, k):
+        k = k % 8
+        return OMEGA_POWER[k]
+
     def __eq__(self, other):
         if isinstance(other, numbers.Integral):
             return self == self.from_int(other)
@@ -744,6 +749,10 @@ class DOmega:
         return (
             cls.from_droottwo(x) + cls.from_droottwo(y) * ZOmega(0, 1, 0, 0)
         ).renew_denomexp(k)
+
+    @classmethod
+    def from_omega_power(cls, k):
+        return cls(ZOmega.from_omega_power(k), 0)
 
     @classmethod
     def from_zomega(cls, x):

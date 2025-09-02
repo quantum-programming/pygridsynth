@@ -8,10 +8,11 @@ from .loop_controller import LoopController
 from .mymath import solve_quadratic, sqrt
 from .quantum_gate import Rz
 from .region import ConvexSet, Ellipse
-from .ring import DRootTwo, ZRootTwo, DOmega
+from .ring import DRootTwo, ZRootTwo, DOmega, ZOmega
 from .synthesis_of_cliffordT import decompose_domega_unitary
+from .quantum_gate import QuantumCircuit, WGate
 from .tdgp import solve_TDGP
-from .to_upright import to_upright_set_pair
+from .to_upright import to_upright_set_pair, _to_upright_ellipse_pair, to_upright_set_pair_with_opG
 from .unitary import DOmegaUnitary
 
 
@@ -63,6 +64,8 @@ class EpsilonRegion(ConvexSet):
 
 
 # Scale epsilon region by 1/(2 + sqrt(2))
+# |delta|^2 = 2 + sqrt(2)
+# See lemma 9.6 in R + S.
 class EpsilonRegionScaled(ConvexSet):
     scale = mpmath.mpmathify(2) + sqrt(mpmath.mpmathify(2))
 
@@ -70,13 +73,16 @@ class EpsilonRegionScaled(ConvexSet):
         scale = EpsilonRegionScaled.scale
         self._theta = theta
         self._epsilon = epsilon
-        self._d = sqrt(1 - epsilon**2 / 4) * mpmath.sqrt(scale)
+        self._d = sqrt(1 - epsilon**2 / 4)
+        self._rd = self._d * mpmath.sqrt(scale)
         self._z_x = mpmath.cos(-theta / 2)
         self._z_y = mpmath.sin(-theta / 2)
+        ev1 = 64 * (1 / epsilon) ** 4 / scale
+        ev2 =  4 * (1 / epsilon) ** 2 / scale
         D_1 = mpmath.matrix([[self._z_x, -self._z_y], [self._z_y, self._z_x]])
-        D_2 = mpmath.matrix([[64 * (1 / epsilon) ** 4 / scale, 0], [0, 4 * (1 / epsilon) ** 2 / scale]])
+        D_2 = mpmath.matrix([[ev1, 0], [0, ev2]])
         D_3 = mpmath.matrix([[self._z_x, self._z_y], [-self._z_y, self._z_x]])
-        p = mpmath.matrix([self._d * self._z_x, self._d * self._z_y])
+        p = mpmath.matrix([self._rd * self._z_x, self._rd * self._z_y])
         ellipse = Ellipse(D_1 @ D_2 @ D_3, p)
         super().__init__(ellipse)
 
@@ -88,9 +94,13 @@ class EpsilonRegionScaled(ConvexSet):
     def epsilon(self):
         return self._epsilon
 
+    # Return true if `u` is inside shaded region in figure in eq (14) in R + S
+    # The radius is 1 in the figure. Here it is scaled.
     def inside(self, u):
         cos_similarity = self._z_x * u.real + self._z_y * u.imag
-        return DRootTwo.fromDOmega(u.conj * u) <= EpsilonRegionScaled.scale and cos_similarity >= self._d
+        scale = DOmega.from_zroottwo(ZRootTwo(2, 1))
+        rad2 = DRootTwo.fromDOmega(u.conj * u)
+        return rad2 <= DRootTwo.fromDOmega(scale) and cos_similarity >= self._rd
 
     def intersect(self, u0, v):
         a = v.conj * v
@@ -99,7 +109,7 @@ class EpsilonRegionScaled(ConvexSet):
         c = (u0.conj * u0) - DOmega.from_zroottwo(scale)
 
         vz = self._z_x * v.real + self._z_y * v.imag
-        rhs = self._d - self._z_x * u0.real - self._z_y * u0.imag
+        rhs = self._rd - self._z_x * u0.real - self._z_y * u0.imag
         t = solve_quadratic(a.real, b.real, c.real)
         if t is None:
             return None
@@ -130,6 +140,9 @@ class UnitDisk(ConvexSet):
 
 
 # Scaled unit disk with hard-coded scale factor
+# Scale disk by 1/(2 - sqrt(2))
+# |conj2(delta)|^2 = 2 - sqrt(2), where conj2 is root-2 conjugation.
+# See lemma 9.6 in R + S.
 class UnitDiskScaled(ConvexSet):
 
     scale = mpmath.mpmathify(2) - sqrt(mpmath.mpmathify(2))
@@ -140,15 +153,16 @@ class UnitDiskScaled(ConvexSet):
         super().__init__(ellipse)
 
 
+    # Return True if |u|^2 < radius of (scaled) disk
     def inside(self, u):
-        scale = ZRootTwo(2, -1) # 2 - sqrt(2)
-        return DRootTwo.fromDOmega(u.conj * u) <= DOmega.from_zroottwo(scale)
-#        return DRootTwo.fromDOmega(u.conj * u) <= UnitDiskScaled.scale
+        scale = DRootTwo.fromDOmega(DOmega.from_zroottwo(ZRootTwo(2, -1))) # 2 - sqrt(2)
+        rad2 = DRootTwo.fromDOmega(u.conj * u)
+        return rad2 <= scale
 
     def intersect(self, u0, v):
         a = v.conj * v
         b = 2 * v.conj * u0
-        scale = ZRootTwo(2, -1) # 2 - sqrt(2)
+        scale = ZRootTwo(2, -1) # 2 - sqrt(2) == |conj2(delta)|^2
         c = u0.conj * u0 - DOmega.from_zroottwo(scale)
         return solve_quadratic(a.real, b.real, c.real)
 
@@ -189,7 +203,6 @@ def get_synthesized_unitary(gates):
     with mpmath.workdps(dps):
         return DOmegaUnitary.from_gates(gates).to_complex_matrix
 
-
 def gridsynth(
     theta,
     epsilon,
@@ -227,90 +240,277 @@ def gridsynth(
     if dps is None:
         dps = _dps_for_epsilon(epsilon)
     with mpmath.workdps(dps):
-        theta = mpmath.mpmathify(theta)
-        epsilon = mpmath.mpmathify(epsilon)
-        if loop_controller is None:
-            loop_controller = LoopController()
-
-        epsilon_region = EpsilonRegion(theta, epsilon)
-        unit_disk = UnitDisk()
-
         if phase:
-            epsilon_region1 = EpsilonRegionScaled(theta, epsilon)
-            unit_disk1 = UnitDiskScaled()
-        else:
-            epsilon_region1 = epsilon_region
-            unit_disk1 = unit_disk
-
-        k = 0
-
-        if measure_time:
-            start = time.time()
-        transformed = to_upright_set_pair(
-            epsilon_region, unit_disk, verbose=verbose, show_graph=show_graph
-        )
-        if measure_time:
-            print(f"to_upright_set_pair: {time.time() - start} s")
-        if verbose:
-            print("------------------")
-
-        time_of_solve_TDGP = 0
-        time_of_diophantine_dyadic = 0
-        while True:
-            if measure_time:
-                start = time.time()
-            sol = solve_TDGP(
-                epsilon_region1,
-                unit_disk1,
-                *transformed,
-                k,
+            result = _gridsynth_upto_phase(
+                theta=theta,
+                epsilon=epsilon,
+                dps=dps,
+                loop_controller=loop_controller,
                 verbose=verbose,
-                show_graph=show_graph,
-            )
-            if measure_time:
-                time_of_solve_TDGP += time.time() - start
+                measure_time=measure_time,
+                show_graph=show_graph)
+        else:
+            result = _gridsynth_exact(
+                theta=theta,
+                epsilon=epsilon,
+                dps=dps,
+                loop_controller=loop_controller,
+                verbose=verbose,
+                measure_time=measure_time,
+                show_graph=show_graph)
 
-            print(k)
+    return result
+
+def _gridsynth_exact(
+    theta,
+    epsilon,
+    dps=None,
+    loop_controller=None,
+    verbose=False,
+    measure_time=False,
+    show_graph=False,
+):
+    theta = mpmath.mpmathify(theta)
+    epsilon = mpmath.mpmathify(epsilon)
+    if loop_controller is None:
+        loop_controller = LoopController()
+
+    epsilon_region = EpsilonRegion(theta, epsilon)
+    unit_disk = UnitDisk()
+
+    if measure_time:
+        start = time.time()
+
+    transformed = to_upright_set_pair(
+        epsilon_region, unit_disk, verbose=verbose, show_graph=show_graph
+    )
+    if measure_time:
+        print(f"to_upright_set_pair: {time.time() - start} s")
+    if verbose:
+        print("------------------")
+
+    time_of_solve_TDGP = 0
+    time_of_diophantine_dyadic = 0
+
+    k = 0
+
+    while True:
+        if measure_time:
             start = time.time()
 
-            ct = 0
-            # print(f"sol {sol}")
-            # print(f"> ct {ct}")
-            for z in sol:
-                print(f"ct {ct}")
-                ct += 1
-                # if ct > 10:
-                #     return
-                if (z * z.conj).residue == 0:
-                    continue
-                xi = 1 - DRootTwo.fromDOmega(z.conj * z)
-                w = diophantine_dyadic(xi, loop_controller=loop_controller)
-                if w != NO_SOLUTION:
-                    z = z.reduce_denomexp()
-                    w = w.reduce_denomexp()
-                    if z.k > w.k:
-                        w = w.renew_denomexp(z.k)
-                    elif z.k < w.k:
-                        z = z.renew_denomexp(w.k)
+        sol = solve_TDGP(
+            epsilon_region,
+            unit_disk,
+            *transformed,
+            k,
+            verbose=verbose,
+            show_graph=show_graph,
+        )
+
+        if measure_time:
+            time_of_solve_TDGP += time.time() - start
+            start = time.time()
+
+        for z in sol:
+            if (z * z.conj).residue == 0:
+                continue
+            xi = 1 - DRootTwo.fromDOmega(z.conj * z)
+            w = diophantine_dyadic(xi, loop_controller=loop_controller)
+            if w != NO_SOLUTION:
+                z = z.reduce_denomexp()
+                w = w.reduce_denomexp()
+                if z.k > w.k:
+                    w = w.renew_denomexp(z.k)
+                elif z.k < w.k:
+                    z = z.renew_denomexp(w.k)
+                if (z + w).reduce_denomexp().k < z.k:
+                    u_approx = DOmegaUnitary(z, w, 0)
+                else:
+                    u_approx = DOmegaUnitary(z, w.mul_by_omega(), 0)
+                if measure_time:
+                    time_of_diophantine_dyadic += time.time() - start
+                    print(f"time of solve_TDGP: {time_of_solve_TDGP * 1000} ms")
+                    print(
+                        "time of diophantine_dyadic: "
+                        f"{time_of_diophantine_dyadic * 1000} ms"
+                    )
+                if verbose:
+                    print(f"{z=}, {w=}")
+                    print("------------------")
+                return u_approx
+        if measure_time:
+            time_of_diophantine_dyadic += time.time() - start
+        k += 1
+
+def _gridsynth_upto_phase(
+    theta,
+    epsilon,
+    dps=None,
+    loop_controller=None,
+    verbose=False,
+    measure_time=False,
+    show_graph=False,
+):
+    theta = mpmath.mpmathify(theta)
+    epsilon = mpmath.mpmathify(epsilon)
+    if loop_controller is None:
+        loop_controller = LoopController()
+
+    epsilon_region = EpsilonRegion(theta, epsilon)
+    unit_disk = UnitDisk()
+
+    epsilon_region1 = EpsilonRegionScaled(theta, epsilon)
+    unit_disk1 = UnitDiskScaled()
+
+    if measure_time:
+        start = time.time()
+    opG = _to_upright_ellipse_pair(epsilon_region.ellipse, unit_disk.ellipse, verbose=verbose)
+
+    transformed = to_upright_set_pair_with_opG(
+        epsilon_region, unit_disk, opG, verbose=verbose, show_graph=show_graph
+    )
+
+    transformed1 = to_upright_set_pair_with_opG(
+        epsilon_region1, unit_disk1, opG, verbose=verbose, show_graph=show_graph
+    )
+
+    if measure_time:
+        print(f"to_upright_set_pair: {time.time() - start} s")
+    if verbose:
+        print("------------------")
+
+    time_of_solve_TDGP = 0
+    time_of_diophantine_dyadic = 0
+    inv_delta = DOmega(ZOmega(0, -1, 1, 0), 1)
+
+    k = 0
+
+    while True:
+        if measure_time:
+            start = time.time()
+
+        sol0 = _candidates(
+            epsilon_region,
+            unit_disk,
+            transformed,
+            phase=False,
+            verbose=verbose,
+            show_graph=show_graph,
+        )
+
+        sol1 = _candidates(
+            epsilon_region1,
+            unit_disk1,
+            transformed1,
+            phase=True,
+            verbose=verbose,
+            show_graph=show_graph,
+        )
+
+        candidates = all_candidates(sol0, sol1)
+
+        start = time.time()
+
+        for (tcount, z, phase) in candidates():
+            if (z * z.conj).residue == 0 and not phase:
+                continue
+            xi = 1 - DRootTwo.fromDOmega(z.conj * z)
+            w = diophantine_dyadic(xi, loop_controller=loop_controller)
+            if w != NO_SOLUTION:
+#                print(f"{tcount} {phase}")
+                z = z.reduce_denomexp()
+                w = w.reduce_denomexp()
+
+                if z.k > w.k:
+                    w = w.renew_denomexp(z.k)
+                elif z.k < w.k:
+                    z = z.renew_denomexp(w.k)
+
+                if phase:
+                    if (z + w).reduce_denomexp().k < z.k:
+                        u_approx = DOmegaUnitary(z, w, 7)
+                    else:
+                        u_approx = DOmegaUnitary(z, w.mul_by_omega_inv(), 7)
+                else:
                     if (z + w).reduce_denomexp().k < z.k:
                         u_approx = DOmegaUnitary(z, w, 0)
                     else:
                         u_approx = DOmegaUnitary(z, w.mul_by_omega(), 0)
-                    if measure_time:
-                        time_of_diophantine_dyadic += time.time() - start
-                        print(f"time of solve_TDGP: {time_of_solve_TDGP * 1000} ms")
-                        print(
-                            "time of diophantine_dyadic: "
-                            f"{time_of_diophantine_dyadic * 1000} ms"
-                        )
-                    if verbose:
-                        print(f"{z=}, {w=}")
-                        print("------------------")
-                    return u_approx
-            if measure_time:
-                time_of_diophantine_dyadic += time.time() - start
+
+                if measure_time:
+                    time_of_diophantine_dyadic += time.time() - start
+                    print(f"time of solve_TDGP: {time_of_solve_TDGP * 1000} ms")
+                    print(
+                        "time of diophantine_dyadic: "
+                        f"{time_of_diophantine_dyadic * 1000} ms"
+                    )
+                if verbose:
+                    print(f"{z=}, {w=}")
+                    print(f"tcount={tcount} phase={phase}")
+                    print("------------------")
+
+                return u_approx
+        if measure_time:
+            time_of_diophantine_dyadic += time.time() - start
+
+def _candidates(
+    epsilon_region,
+    disk,
+    transformed,
+    phase=False,
+    verbose=False,
+    show_graph=False,
+#    measure_time=False,
+):
+    if phase:
+        inv_delta = DOmega(ZOmega(0, -1, 1, 0), 1)
+    def icandidates():
+        k = 0
+        while True:
+            sol = solve_TDGP(
+                epsilon_region,
+                disk,
+                *transformed,
+                k,
+                phase=phase,
+                verbose=verbose,
+                show_graph=show_graph,
+            )
+            # if measure_time:
+            #     time_of_solve_TDGP += time.time() - start
+
+            for z in sol:
+                klde = z.k
+                if klde > 0:
+                    tcount = 2*klde - 2
+                else:
+                    tcount = 0
+                if phase:
+                    tcount += 1
+                    z = z * inv_delta
+                yield (tcount, z, phase)
             k += 1
 
+    return icandidates
+
+def all_candidates(icandidates0, icandidates1):
+    c0 = icandidates0()
+    c1 = icandidates1()
+    def itall_candidates():
+        tup0 = next(c0)
+        tup1 = next(c1)
+
+        while True:
+            tcount0 = tup0[0]
+            tcount1 = tup1[0]
+
+            if tcount0 < tcount1:
+                yield tup0
+                tup0 = next(c0)
+            else:
+                yield tup1
+                tup1 = next(c1)
+    return itall_candidates
 
 def gridsynth_circuit(
     theta,
@@ -369,6 +569,7 @@ def gridsynth_circuit(
         circuit = decompose_domega_unitary(
             u_approx, wires=wires, decompose_phase_gate=decompose_phase_gate
         )
+
         if measure_time:
             print(
                 f"time of decompose_domega_unitary: {(time.time() - start) * 1000} ms"
@@ -388,6 +589,7 @@ def gridsynth_gates(
     floop=10,
     seed=0,
     phase=False,
+    strip_phase=False,
     verbose=False,
     measure_time=False,
     show_graph=False,
@@ -417,7 +619,6 @@ def gridsynth_gates(
             stacklevel=2,
         )
 
-    print(f"PHASE: {phase}")
     set_random_seed(seed)
 
     loop_controller = LoopController(
@@ -441,6 +642,10 @@ def gridsynth_gates(
             measure_time=measure_time,
             show_graph=show_graph,
         )
+        if strip_phase:
+            # Remove global phase gates, W. That is "strip" global phase
+            circuit = QuantumCircuit(phase=circuit.phase, args=[x for x in list(circuit) if not isinstance(x, WGate)])
+
         return circuit.to_simple_str()
 
 

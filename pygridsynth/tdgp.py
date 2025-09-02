@@ -3,9 +3,10 @@ import itertools
 from .myplot import plot_sol
 from .odgp import solve_scaled_ODGP, solve_scaled_ODGP_with_parity
 from .region import Interval
-from .ring import DOmega, DRootTwo
+from .ring import DOmega, DRootTwo, ZOmega
 
-
+# TDGP: Two-dimensional grid problem
+#
 def solve_TDGP(
     setA,
     setB,
@@ -15,6 +16,7 @@ def solve_TDGP(
     bboxA,
     bboxB,
     k,
+    phase=False,
     verbose=False,
     show_graph=False,
 ):
@@ -50,10 +52,7 @@ def solve_TDGP(
         return map(lambda alpha: DOmega.from_droottwo_vector(alpha, beta, k), sol_x)
 
     sol_sufficient = itertools.chain.from_iterable(map(gen_sol_sufficient, sol_y))
-
     sol_transformed = map(lambda z: opG.inv * z, sol_sufficient)
-    sol = filter(lambda z: setA.inside(z) and setB.inside(z.conj_sq2), sol_transformed)
-    print(f"found sol, {len(list(sol))}")
     sol = filter(lambda z: setA.inside(z) and setB.inside(z.conj_sq2), sol_transformed)
 
     if show_graph:

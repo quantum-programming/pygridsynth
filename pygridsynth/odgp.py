@@ -3,6 +3,7 @@ import itertools
 from .mymath import SQRT2, ceil, floor, floorlog, pow_sqrt2
 from .ring import LAMBDA, DRootTwo, ZRootTwo
 
+# ODGP: One-dimensional grid problem
 
 def _solve_ODGP_internal(I, J):
     if I.width < 0 or J.width < 0:
