@@ -53,6 +53,8 @@ def solve_TDGP(
 
     sol_transformed = map(lambda z: opG.inv * z, sol_sufficient)
     sol = filter(lambda z: setA.inside(z) and setB.inside(z.conj_sq2), sol_transformed)
+    print(f"found sol, {len(list(sol))}")
+    sol = filter(lambda z: setA.inside(z) and setB.inside(z.conj_sq2), sol_transformed)
 
     if show_graph:
         plot_sol(
@@ -64,5 +66,6 @@ def solve_TDGP(
             color_list=["limegreen", "blue"],
             size_list=[5, 10],
         )
+
 
     return sol

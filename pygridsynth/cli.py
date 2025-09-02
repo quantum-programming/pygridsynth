@@ -14,6 +14,7 @@ helps = {
         "allowed during the factoring process"
     ),
     "seed": "Random seed for deterministic results",
+    "phase": "up to Phase help",
 }
 
 
@@ -27,6 +28,7 @@ def main():
     parser.add_argument("--ftimeout", "-ft", type=float, default=None, help=helps["ft"])
     parser.add_argument("--dloop", "-dl", type=int, default=10, help=helps["dl"])
     parser.add_argument("--floop", "-fl", type=int, default=10, help=helps["fl"])
+    parser.add_argument("--phase", "-p", action="store_true")
     parser.add_argument("--seed", type=int, default=0, help=helps["seed"])
     parser.add_argument("--verbose", "-v", action="store_true")
     parser.add_argument("--time", "-t", action="store_true")
@@ -42,6 +44,7 @@ def main():
         dloop=args.dloop,
         floop=args.floop,
         seed=args.seed,
+        phase=args.phase,
         verbose=args.verbose,
         measure_time=args.time,
         show_graph=args.showgraph,
