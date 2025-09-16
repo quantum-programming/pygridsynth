@@ -3,8 +3,7 @@ import numbers
 import random
 import warnings
 
-from pygridsynth.loop_controller import LoopController
-
+from .loop_controller import LoopController
 from .ring import DOmega, ZOmega, ZRootTwo
 
 NO_SOLUTION = "no solution"
@@ -454,7 +453,8 @@ def _diophantine(xi, loop_controller: LoopController):
             return v * t
 
 
-def diophantine_dyadic(xi, loop_controller=None):
+def diophantine_dyadic(xi, seed=0, loop_controller=None):
+    set_random_seed(seed)
     if loop_controller is None:
         loop_controller = LoopController()
 

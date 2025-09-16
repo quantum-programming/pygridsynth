@@ -3,7 +3,8 @@ import warnings
 
 import mpmath
 
-from .diophantine import NO_SOLUTION, diophantine_dyadic, set_random_seed
+from .config import GridsynthConfig
+from .diophantine import NO_SOLUTION, diophantine_dyadic
 from .loop_controller import LoopController
 from .mymath import solve_quadratic, sqrt
 from .quantum_gate import Rz
@@ -115,15 +116,18 @@ def get_synthesized_unitary(gates):
         return DOmegaUnitary.from_gates(gates).to_complex_matrix
 
 
-def gridsynth(
-    theta,
-    epsilon,
-    dps=None,
-    loop_controller=None,
-    verbose=False,
-    measure_time=False,
-    show_graph=False,
-):
+def gridsynth(theta, epsilon, cfg=None, **kwargs):
+    if cfg is None:
+        cfg = GridsynthConfig(**kwargs)
+    elif kwargs:
+        warnings.warn(
+            "When 'cfg' is provided, 'kwargs' are ignored.",
+            stacklevel=2,
+        )
+
+    if cfg.dps is None:
+        cfg.dps = _dps_for_epsilon(epsilon)
+
     if isinstance(theta, float):
         warnings.warn(
             (
@@ -148,42 +152,38 @@ def gridsynth(
             stacklevel=2,
         )
 
-    if dps is None:
-        dps = _dps_for_epsilon(epsilon)
-    with mpmath.workdps(dps):
+    with mpmath.workdps(cfg.dps):
         theta = mpmath.mpmathify(theta)
         epsilon = mpmath.mpmathify(epsilon)
-        if loop_controller is None:
-            loop_controller = LoopController()
 
         epsilon_region = EpsilonRegion(theta, epsilon)
         unit_disk = UnitDisk()
         k = 0
 
-        if measure_time:
+        if cfg.measure_time:
             start = time.time()
         transformed = to_upright_set_pair(
-            epsilon_region, unit_disk, verbose=verbose, show_graph=show_graph
+            epsilon_region, unit_disk, verbose=cfg.verbose, show_graph=cfg.show_graph
         )
-        if measure_time:
+        if cfg.measure_time:
             print(f"to_upright_set_pair: {time.time() - start} s")
-        if verbose:
+        if cfg.verbose:
             print("------------------")
 
         time_of_solve_TDGP = 0
         time_of_diophantine_dyadic = 0
         while True:
-            if measure_time:
+            if cfg.measure_time:
                 start = time.time()
             sol = solve_TDGP(
                 epsilon_region,
                 unit_disk,
                 *transformed,
                 k,
-                verbose=verbose,
-                show_graph=show_graph,
+                verbose=cfg.verbose,
+                show_graph=cfg.show_graph,
             )
-            if measure_time:
+            if cfg.measure_time:
                 time_of_solve_TDGP += time.time() - start
                 start = time.time()
 
@@ -191,7 +191,9 @@ def gridsynth(
                 if (z * z.conj).residue == 0:
                     continue
                 xi = 1 - DRootTwo.fromDOmega(z.conj * z)
-                w = diophantine_dyadic(xi, loop_controller=loop_controller)
+                w = diophantine_dyadic(
+                    xi, seed=cfg.seed, loop_controller=cfg.loop_controller
+                )
                 if w != NO_SOLUTION:
                     z = z.reduce_denomexp()
                     w = w.reduce_denomexp()
@@ -203,78 +205,43 @@ def gridsynth(
                         u_approx = DOmegaUnitary(z, w, 0)
                     else:
                         u_approx = DOmegaUnitary(z, w.mul_by_omega(), 0)
-                    if measure_time:
+                    if cfg.measure_time:
                         time_of_diophantine_dyadic += time.time() - start
                         print(f"time of solve_TDGP: {time_of_solve_TDGP * 1000} ms")
                         print(
                             "time of diophantine_dyadic: "
                             f"{time_of_diophantine_dyadic * 1000} ms"
                         )
-                    if verbose:
+                    if cfg.verbose:
                         print(f"{z=}, {w=}")
                         print("------------------")
                     return u_approx
-            if measure_time:
+            if cfg.measure_time:
                 time_of_diophantine_dyadic += time.time() - start
             k += 1
 
 
-def gridsynth_circuit(
-    theta,
-    epsilon,
-    wires=[0],
-    decompose_phase_gate=True,
-    dps=None,
-    loop_controller=None,
-    verbose=False,
-    measure_time=False,
-    show_graph=False,
-):
-    if isinstance(theta, float):
+def gridsynth_circuit(theta, epsilon, wires=[0], cfg=None, **kwargs):
+    if cfg is None:
+        cfg = GridsynthConfig(**kwargs)
+    elif kwargs:
         warnings.warn(
-            (
-                f"pygridsynth is synthesizing the angle {theta}. "
-                "Please verify that this is the intended value. "
-                "Using float may introduce precision errors; "
-                "consider using mpmath.mpf for exact precision."
-            ),
-            UserWarning,
+            "When 'cfg' is provided, 'kwargs' are ignored.",
             stacklevel=2,
         )
 
-    if isinstance(epsilon, float):
-        warnings.warn(
-            (
-                f"pygridsynth is using epsilon={epsilon} as the tolerance. "
-                "Please verify that this is the intended value. "
-                "Using float may introduce precision errors; "
-                "consider using mpmath.mpf for exact precision."
-            ),
-            UserWarning,
-            stacklevel=2,
-        )
+    if cfg.dps is None:
+        cfg.dps = _dps_for_epsilon(epsilon)
 
-    if dps is None:
-        dps = _dps_for_epsilon(epsilon)
-    with mpmath.workdps(dps):
-        theta = mpmath.mpmathify(theta)
-        epsilon = mpmath.mpmathify(epsilon)
-        start_total = time.time() if measure_time else 0.0
-        u_approx = gridsynth(
-            theta=theta,
-            epsilon=epsilon,
-            dps=dps,
-            loop_controller=loop_controller,
-            verbose=verbose,
-            measure_time=measure_time,
-            show_graph=show_graph,
-        )
+    with mpmath.workdps(cfg.dps):
+        start_total = time.time() if cfg.measure_time else 0.0
+        u_approx = gridsynth(theta=theta, epsilon=epsilon, cfg=cfg)
 
-        start = time.time() if measure_time else 0.0
+        start = time.time() if cfg.measure_time else 0.0
         circuit = decompose_domega_unitary(
-            u_approx, wires=wires, decompose_phase_gate=decompose_phase_gate
+            u_approx, wires=wires, upto_phase=cfg.upto_phase
         )
-        if measure_time:
+        if cfg.measure_time:
             print(
                 f"time of decompose_domega_unitary: {(time.time() - start) * 1000} ms"
             )
@@ -283,65 +250,24 @@ def gridsynth_circuit(
         return circuit
 
 
-def gridsynth_gates(
-    theta,
-    epsilon,
-    dps=None,
-    dtimeout=None,
-    ftimeout=None,
-    dloop=10,
-    floop=10,
-    seed=0,
-    verbose=False,
-    measure_time=False,
-    show_graph=False,
-    decompose_phase_gate=True,
-):
-    if isinstance(theta, float):
+def gridsynth_gates(theta, epsilon, cfg=None, **kwargs):
+    if cfg is None:
+        cfg = GridsynthConfig(**kwargs)
+    elif kwargs:
         warnings.warn(
-            (
-                f"pygridsynth is synthesizing the angle {theta}. "
-                "Please verify that this is the intended value. "
-                "Using float may introduce precision errors; "
-                "consider using mpmath.mpf for exact precision."
-            ),
-            UserWarning,
+            "When 'cfg' is provided, 'kwargs' are ignored.",
             stacklevel=2,
         )
 
-    if isinstance(epsilon, float):
-        warnings.warn(
-            (
-                f"pygridsynth is using epsilon={epsilon} as the tolerance. "
-                "Please verify that this is the intended value. "
-                "Using float may introduce precision errors; "
-                "consider using mpmath.mpf for exact precision."
-            ),
-            UserWarning,
-            stacklevel=2,
-        )
+    if cfg.dps is None:
+        cfg.dps = _dps_for_epsilon(epsilon)
 
-    set_random_seed(seed)
-
-    loop_controller = LoopController(
-        dloop=dloop, floop=floop, dtimeout=dtimeout, ftimeout=ftimeout
-    )
-
-    if dps is None:
-        dps = _dps_for_epsilon(epsilon)
-    with mpmath.workdps(dps):
-        theta = mpmath.mpmathify(theta)
-        epsilon = mpmath.mpmathify(epsilon)
+    with mpmath.workdps(cfg.dps):
         circuit = gridsynth_circuit(
             theta=theta,
             epsilon=epsilon,
             wires=[0],
-            decompose_phase_gate=decompose_phase_gate,
-            dps=dps,
-            loop_controller=loop_controller,
-            verbose=verbose,
-            measure_time=measure_time,
-            show_graph=show_graph,
+            cfg=cfg,
         )
         return circuit.to_simple_str()
 
