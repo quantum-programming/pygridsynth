@@ -1,5 +1,5 @@
 from .normal_form import NormalForm
-from .quantum_gate import W_PHASE, HGate, QuantumCircuit, SGate, SXGate, TGate, WGate
+from .quantum_gate import HGate, QuantumCircuit, SGate, SXGate, TGate, WGate, w_phase
 from .ring import OMEGA_POWER
 from .unitary import DOmegaUnitary
 
@@ -78,7 +78,7 @@ def decompose_domega_unitary(unitary, wires, upto_phase=False):
         for _ in range(m_W):
             circuit.append(WGate())
     else:
-        circuit.phase = m_W * W_PHASE
+        circuit.phase = m_W * w_phase()
 
     assert unitary == DOmegaUnitary.identity(), "decomposition failed..."
     circuit = NormalForm.from_circuit(circuit).to_circuit(wires=wires)

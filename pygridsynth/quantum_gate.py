@@ -1,7 +1,12 @@
 import mpmath
 
-CNOT01 = mpmath.matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
-W_PHASE = mpmath.mp.pi / 4
+
+def cnot01():
+    return mpmath.matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+
+
+def w_phase():
+    return mpmath.mp.pi / 4
 
 
 def Rz(theta):
@@ -132,7 +137,7 @@ class SGate(SingleQubitGate):
 
 class WGate(SingleQubitGate):
     def __init__(self):
-        matrix = mpmath.exp(1.0j * W_PHASE)
+        matrix = mpmath.exp(1.0j * w_phase())
         super().__init__(matrix, [])
 
     def __str__(self) -> str:
@@ -199,7 +204,7 @@ class RxGate(SingleQubitGate):
 
 class CxGate(QuantumGate):
     def __init__(self, control_qubit, target_qubit):
-        matrix = CNOT01
+        matrix = cnot01()
         super().__init__(matrix, [control_qubit, target_qubit])
 
     @property
