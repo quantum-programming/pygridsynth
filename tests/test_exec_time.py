@@ -12,9 +12,7 @@ def test_exec_time():
         t0 = time.perf_counter()
         dps = 15 + int(-mpmath.log10(mpmath.mpmathify(eps)) * 2.5)
         mpmath.mp.dps = dps
-        gates = gridsynth_gates(
-            mpmath.mpmathify(theta), mpmath.mpmathify(eps), decompose_phase_gate=False
-        )
+        gates = gridsynth_gates(mpmath.mpmathify(theta), mpmath.mpmathify(eps))
         t1 = time.perf_counter()
 
         print(f"eps: {eps}, TL: {TL}, time: {t1 - t0:.2f} seconds")
