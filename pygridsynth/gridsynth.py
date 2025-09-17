@@ -95,9 +95,7 @@ def generate_complex_unitary(sol):
     )
 
 
-def error(theta, gates, phase=0):
-    tcount = gates.count("T")
-    epsilon = 2 ** (-tcount // 3)
+def error(theta, epsilon, gates, phase=0):
     dps = _dps_for_epsilon(epsilon)
     with mpmath.workdps(dps):
         theta = mpmath.mpmathify(theta)
