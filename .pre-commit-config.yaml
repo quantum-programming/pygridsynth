@@ -18,7 +18,7 @@ repos:
           # E203 whitespace before ':'
           # E741 ambiguous variable name 'I'
           # W503 line break before binary operator
-          - "--max-line-length=80"
+          - "--max-line-length=88"
           - "--select=B950"
           - "--ignore=E203,E501,E741,E701,W503"
   - repo: https://github.com/pre-commit/mirrors-mypy

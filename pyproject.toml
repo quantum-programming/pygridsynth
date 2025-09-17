@@ -49,7 +49,7 @@ pythonpath = ["."]
 profile = "black"
 
 [tool.flake8]
-max-line-length = 80
+max-line-length = 88
 extend-select = "B950"
 extend-ignore = "E203,E501,E701"
 
