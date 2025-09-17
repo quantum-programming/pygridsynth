@@ -1,24 +1,30 @@
 import itertools
+from typing import Iterator
 
+from .grid_op import GridOp
 from .myplot import plot_sol
 from .odgp import solve_scaled_ODGP, solve_scaled_ODGP_with_parity
-from .region import Interval
+from .region import ConvexSet, Ellipse, Interval, Rectangle
 from .ring import DOmega, DRootTwo
 
 
 def solve_TDGP(
-    setA,
-    setB,
-    opG,
-    ellipseA_upright,
-    ellipseB_upright,
-    bboxA,
-    bboxB,
-    k,
-    verbose=False,
-    show_graph=False,
-):
-    sol_sufficient = iter([])
+    setA: ConvexSet,
+    setB: ConvexSet,
+    opG: GridOp,
+    ellipseA_upright: Ellipse,
+    ellipseB_upright: Ellipse,
+    bboxA: Rectangle,
+    bboxB: Rectangle,
+    k: int,
+    verbose: bool = False,
+    show_graph: bool = False,
+) -> Iterator[DOmega]:
+    opG_inv = opG.inv
+    if opG_inv is None:
+        raise ValueError(f"Cannot compute inverse: grid operator {opG} has no inverse.")
+
+    sol_sufficient: Iterator[DOmega] = iter([])
     sol_x = solve_scaled_ODGP(bboxA.I_x, bboxB.I_x, k + 1)
     try:
         alpha0 = next(sol_x)
@@ -31,10 +37,10 @@ def solve_TDGP(
         k + 1,
     )
 
-    def gen_sol_sufficient(beta):
+    def gen_sol_sufficient(beta: DRootTwo) -> Iterator[DOmega]:
         dx = DRootTwo.power_of_inv_sqrt2(k)
-        z0 = opG.inv * DOmega.from_droottwo_vector(alpha0, beta, k + 1)
-        v = opG.inv * DOmega.from_droottwo_vector(dx, DRootTwo.from_int(0), k)
+        z0 = opG_inv * DOmega.from_droottwo_vector(alpha0, beta, k + 1)
+        v = opG_inv * DOmega.from_droottwo_vector(dx, DRootTwo.from_int(0), k)
         t_A = setA.intersect(z0, v)
         t_B = setB.intersect(z0.conj_sq2, v.conj_sq2)
         if t_A is None or t_B is None:
@@ -51,7 +57,7 @@ def solve_TDGP(
 
     sol_sufficient = itertools.chain.from_iterable(map(gen_sol_sufficient, sol_y))
 
-    sol_transformed = map(lambda z: opG.inv * z, sol_sufficient)
+    sol_transformed = map(lambda z: opG_inv * z, sol_sufficient)
     sol = filter(lambda z: setA.inside(z) and setB.inside(z.conj_sq2), sol_transformed)
 
     if show_graph:

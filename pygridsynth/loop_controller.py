@@ -10,13 +10,13 @@ class LoopController:
         floop: int = 10,
         dtimeout: Optional[float] = None,
         ftimeout: Optional[float] = None,
-    ):
-        self.diophantine_loops = dloop
-        self.factoring_loops = floop
-        self.diophantine_timeout = (
+    ) -> None:
+        self.diophantine_loops: int = dloop
+        self.factoring_loops: int = floop
+        self.diophantine_timeout: float = (
             dtimeout / 1000 if dtimeout is not None else float("inf")
         )
-        self.factoring_timeout = (
+        self.factoring_timeout: float = (
             ftimeout / 1000 if ftimeout is not None else float("inf")
         )
 

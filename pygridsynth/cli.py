@@ -18,7 +18,7 @@ helps = {
 }
 
 
-def main():
+def main() -> str:
     parser = argparse.ArgumentParser()
 
     parser.add_argument("theta", type=str)

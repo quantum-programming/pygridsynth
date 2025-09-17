@@ -77,8 +77,8 @@ class F_p2:
             a %= self.__class__.p
         if b < 0 or b >= self.__class__.p:
             b %= self.__class__.p
-        self._a = a
-        self._b = b
+        self._a: int = a
+        self._b: int = b
 
     @property
     def a(self) -> int:
@@ -270,18 +270,19 @@ def _adj_decompose_int(
     while len(facs):
         p, k = facs.pop()
         t_p = _adj_decompose_int_prime_power(p, k)
-        if t_p == Result.NO_SOLUTION:
-            return Result.NO_SOLUTION
-        elif t_p is Result.UNSOLVED:
-            fac = _find_factor(p, loop_controller)
-            if fac is None:
-                facs.append((p, k))
-                if not loop_controller.check_diophantine_continue():
-                    return Result.NO_SOLUTION
-            else:
-                facs.append((p // fac, k))
-                facs.append((fac, k))
-                _, facs = _decompose_relatively_int_prime(facs)
+        if isinstance(t_p, Result):
+            if t_p == Result.NO_SOLUTION:
+                return Result.NO_SOLUTION
+            elif t_p == Result.UNSOLVED:
+                fac = _find_factor(p, loop_controller)
+                if fac is None:
+                    facs.append((p, k))
+                    if not loop_controller.check_diophantine_continue():
+                        return Result.NO_SOLUTION
+                else:
+                    facs.append((p // fac, k))
+                    facs.append((fac, k))
+                    _, facs = _decompose_relatively_int_prime(facs)
         else:
             t *= t_p
     return t
@@ -306,8 +307,8 @@ def _adj_decompose_selfassociate(
 
 def _decompose_relatively_zomega_prime(
     partial_facs: list[tuple[ZRootTwo, int]],
-) -> tuple[int, list[tuple[ZRootTwo, int]]]:
-    u = 1
+) -> tuple[ZRootTwo, list[tuple[ZRootTwo, int]]]:
+    u = ZRootTwo.from_int(1)
     stack = list(reversed(partial_facs))
     facs: list[tuple[ZRootTwo, int]] = []
     while len(stack):
@@ -359,14 +360,14 @@ def _adj_decompose_zomega_prime(eta: ZRootTwo) -> ZOmega | Result:
                 return Result.UNSOLVED
             else:
                 t = ZOmega.gcd(h + ZOmega(0, 1, 0, 0), eta)
-                return t if ZRootTwo.sim(t.conj * t, eta) else Result.UNSOLVED
+                return t if ZOmega.sim(t.conj * t, eta) else Result.UNSOLVED
         elif p & 0b111 == 3:
             h = _root_mod(-2, p)
             if h is None:
                 return Result.UNSOLVED
             else:
                 t = ZOmega.gcd(h + ZOmega(1, 0, 1, 0), eta)
-                return t if ZRootTwo.sim(t.conj * t, eta) else Result.UNSOLVED
+                return t if ZOmega.sim(t.conj * t, eta) else Result.UNSOLVED
         elif p & 0b111 == 7:
             h = _root_mod(2, p)
             if h is not None:
@@ -388,7 +389,7 @@ def _adj_decompose_zomega_prime(eta: ZRootTwo) -> ZOmega | Result:
 
 def _adj_decompose_zomega_prime_power(eta: ZRootTwo, k: int) -> ZOmega | Result:
     if not (k & 1):
-        return eta ** (k // 2)
+        return ZOmega.from_zroottwo(eta ** (k // 2))
     else:
         t = _adj_decompose_zomega_prime(eta)
         if isinstance(t, Result):
@@ -406,22 +407,23 @@ def _adj_decompose_selfcoprime(
     while len(facs):
         eta, k = facs.pop()
         t_eta = _adj_decompose_zomega_prime_power(eta, k)
-        if t_eta == Result.NO_SOLUTION:
-            return Result.NO_SOLUTION
-        elif t_eta is Result.UNSOLVED:
-            n = eta.norm
-            if n < 0:
-                n = -n
-            fac_n = _find_factor(n, loop_controller)
-            if fac_n is None:
-                facs.append((eta, k))
-                if not loop_controller.check_diophantine_continue():
-                    return Result.NO_SOLUTION
-            else:
-                fac = ZRootTwo.gcd(xi, fac_n)
-                facs.append((eta // fac, k))
-                facs.append((fac, k))
-                _, facs = _decompose_relatively_zomega_prime(facs)
+        if isinstance(t_eta, Result):
+            if t_eta == Result.NO_SOLUTION:
+                return Result.NO_SOLUTION
+            elif t_eta == Result.UNSOLVED:
+                n = eta.norm
+                if n < 0:
+                    n = -n
+                fac_n = _find_factor(n, loop_controller)
+                if fac_n is None:
+                    facs.append((eta, k))
+                    if not loop_controller.check_diophantine_continue():
+                        return Result.NO_SOLUTION
+                else:
+                    fac = ZRootTwo.gcd(xi, fac_n)
+                    facs.append((eta // fac, k))
+                    facs.append((fac, k))
+                    _, facs = _decompose_relatively_zomega_prime(facs)
         else:
             t *= t_eta
     return t

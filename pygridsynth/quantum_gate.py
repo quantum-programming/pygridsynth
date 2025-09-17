@@ -1,21 +1,27 @@
+from __future__ import annotations
+
+from typing import Iterable
+
 import mpmath
 
+from .mymath import RealNum
 
-def cnot01():
+
+def cnot01() -> mpmath.matrix:
     return mpmath.matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
 
 
-def w_phase():
+def w_phase() -> mpmath.mpf:
     return mpmath.mp.pi / 4
 
 
-def Rz(theta):
+def Rz(theta: mpmath.mpf) -> mpmath.matrix:
     return mpmath.matrix(
         [[mpmath.exp(-1.0j * theta / 2), 0], [0, mpmath.exp(1.0j * theta / 2)]]
     )
 
 
-def Rx(theta):
+def Rx(theta: mpmath.mpf) -> mpmath.matrix:
     return mpmath.matrix(
         [
             [mpmath.cos(-theta / 2), 1.0j * mpmath.sin(-theta / 2)],
@@ -25,26 +31,26 @@ def Rx(theta):
 
 
 class QuantumGate:
-    def __init__(self, matrix, wires):
-        self._matrix = matrix
-        self._wires = wires
+    def __init__(self, matrix: mpmath.matrix, wires: list[int]) -> None:
+        self._matrix: mpmath.matrix = matrix
+        self._wires: list[int] = wires
 
     @property
-    def matrix(self):
+    def matrix(self) -> mpmath.matrix:
         return self._matrix
 
     @matrix.setter
-    def matrix(self, matrix):
+    def matrix(self, matrix: mpmath.matrix) -> None:
         self._matrix = matrix
 
     @property
-    def wires(self):
+    def wires(self) -> list[int]:
         return self._wires
 
     def __str__(self) -> str:
         return f"QuantumGate({self.matrix}, {self.wires})"
 
-    def to_whole_matrix(self, num_qubits):
+    def to_whole_matrix(self, num_qubits: int) -> mpmath.matrix:
         whole_matrix = mpmath.matrix(2**num_qubits)
         m = len(self._wires)
         target_qubit_sorted = sorted(self._wires, reverse=True)
@@ -70,18 +76,18 @@ class QuantumGate:
 
 
 class SingleQubitGate(QuantumGate):
-    def __init__(self, matrix, target_qubit):
-        self._matrix = matrix
-        self._wires = [target_qubit]
+    def __init__(self, matrix: mpmath.matrix, target_qubit: int) -> None:
+        self._matrix: mpmath.matrix = matrix
+        self._wires: list[int] = [target_qubit]
 
     @property
-    def target_qubit(self):
+    def target_qubit(self) -> int:
         return self._wires[0]
 
     def __str__(self) -> str:
         return f"SingleQubitGate({self.matrix}, {self.target_qubit})"
 
-    def to_whole_matrix(self, num_qubits):
+    def to_whole_matrix(self, num_qubits: int) -> mpmath.matrix:
         whole_matrix = mpmath.matrix(2**num_qubits)
         t = num_qubits - self.target_qubit - 1
 
@@ -100,7 +106,7 @@ class SingleQubitGate(QuantumGate):
 
 
 class HGate(SingleQubitGate):
-    def __init__(self, target_qubit):
+    def __init__(self, target_qubit: int) -> None:
         matrix = mpmath.sqrt(2) / 2 * mpmath.matrix([[1, 1], [1, -1]])
         super().__init__(matrix, target_qubit)
 
@@ -112,7 +118,7 @@ class HGate(SingleQubitGate):
 
 
 class TGate(SingleQubitGate):
-    def __init__(self, target_qubit):
+    def __init__(self, target_qubit: int) -> None:
         matrix = mpmath.matrix([[1, 0], [0, mpmath.exp(1.0j * mpmath.pi / 4)]])
         super().__init__(matrix, target_qubit)
 
@@ -124,7 +130,7 @@ class TGate(SingleQubitGate):
 
 
 class SGate(SingleQubitGate):
-    def __init__(self, target_qubit):
+    def __init__(self, target_qubit: int) -> None:
         matrix = mpmath.matrix([[1, 0], [0, 1.0j]])
         super().__init__(matrix, target_qubit)
 
@@ -135,8 +141,8 @@ class SGate(SingleQubitGate):
         return "S"
 
 
-class WGate(SingleQubitGate):
-    def __init__(self):
+class WGate(QuantumGate):
+    def __init__(self) -> None:
         matrix = mpmath.exp(1.0j * w_phase())
         super().__init__(matrix, [])
 
@@ -146,12 +152,12 @@ class WGate(SingleQubitGate):
     def to_simple_str(self) -> str:
         return "W"
 
-    def to_whole_matrix(self, num_qubits):
+    def to_whole_matrix(self, num_qubits: int) -> mpmath.matrix:
         return self._matrix
 
 
 class SXGate(SingleQubitGate):
-    def __init__(self, target_qubit):
+    def __init__(self, target_qubit: int) -> None:
         matrix = mpmath.matrix([[0, 1], [1, 0]])
         super().__init__(matrix, target_qubit)
 
@@ -163,62 +169,62 @@ class SXGate(SingleQubitGate):
 
 
 class RzGate(SingleQubitGate):
-    def __init__(self, theta, target_qubit):
+    def __init__(self, theta: mpmath.mpf, target_qubit: int) -> None:
         self._theta = theta
         matrix = Rz(theta)
         super().__init__(matrix, target_qubit)
 
     @property
-    def theta(self):
+    def theta(self) -> mpmath.mpf:
         return self._theta
 
     def __str__(self) -> str:
         return f"RzGate({self.theta}, {self.target_qubit})"
 
-    def __mul__(self, other):
-        if isinstance(other, Rz) and self._target_qubit == other.target_qubit:
-            return RzGate(self._theta + other.theta)
+    def __mul__(self, other: RzGate) -> RzGate:
+        if isinstance(other, RzGate) and self.target_qubit == other.target_qubit:
+            return RzGate(self._theta + other.theta, self.target_qubit)
         else:
             return NotImplemented
 
 
 class RxGate(SingleQubitGate):
-    def __init__(self, theta, target_qubit):
+    def __init__(self, theta: mpmath.mpf, target_qubit: int) -> None:
         self._theta = theta
         matrix = Rx(theta)
         super().__init__(matrix, target_qubit)
 
     @property
-    def theta(self):
+    def theta(self) -> mpmath.mpf:
         return self._theta
 
     def __str__(self) -> str:
         return f"RxGate({self.theta}, {self.target_qubit})"
 
-    def __mul__(self, other):
-        if isinstance(other, Rx) and self._target_qubit == other.target_qubit:
-            return RxGate(self._theta + other.theta)
+    def __mul__(self, other: RxGate) -> RxGate:
+        if isinstance(other, RxGate) and self.target_qubit == other.target_qubit:
+            return RxGate(self._theta + other.theta, self.target_qubit)
         else:
             return NotImplemented
 
 
 class CxGate(QuantumGate):
-    def __init__(self, control_qubit, target_qubit):
+    def __init__(self, control_qubit: int, target_qubit: int) -> None:
         matrix = cnot01()
         super().__init__(matrix, [control_qubit, target_qubit])
 
     @property
-    def control_qubit(self):
+    def control_qubit(self) -> int:
         return self.wires[0]
 
     @property
-    def target_qubit(self):
+    def target_qubit(self) -> int:
         return self.wires[1]
 
     def __str__(self) -> str:
         return f"CxGate({self.control_qubit}, {self.target_qubit})"
 
-    def to_whole_matrix(self, num_qubits):
+    def to_whole_matrix(self, num_qubits: int) -> mpmath.matrix:
         whole_matrix = mpmath.matrix(2**num_qubits)
         c = num_qubits - self.control_qubit - 1
         t = num_qubits - self.target_qubit - 1
@@ -244,64 +250,64 @@ class CxGate(QuantumGate):
 
 
 class QuantumCircuit(list):
-    def __init__(self, phase=0, args=[]):
-        self._phase = phase % (2 * mpmath.mp.pi)
+    def __init__(self, phase: RealNum = 0, args: list[QuantumGate] = []) -> None:
+        self._phase = mpmath.mpf(phase) % (2 * mpmath.mp.pi)
         super().__init__(args)
 
     @classmethod
-    def from_list(cls, gates):
+    def from_list(cls, gates: list[QuantumGate]) -> QuantumCircuit:
         return cls(args=gates)
 
     @property
-    def phase(self):
+    def phase(self) -> mpmath.mpf:
         return self._phase
 
     @phase.setter
-    def phase(self, phase):
-        self._phase = phase
+    def phase(self, phase: RealNum) -> None:
+        self._phase = mpmath.mpf(phase) % (2 * mpmath.mp.pi)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"exp(1.j * {self._phase}) * " + " * ".join(str(gate) for gate in self)
 
-    def to_simple_str(self):
+    def to_simple_str(self) -> str:
         return "".join(g.to_simple_str() for g in self)
 
-    def __add__(self, other):
+    def __add__(self, other: QuantumCircuit | list) -> QuantumCircuit:
         if isinstance(other, QuantumCircuit):
-            return QuantumCircuit(self.phase + other.phase, super().__add__(other))
+            return QuantumCircuit(self.phase + other.phase, list(self) + list(other))
         elif isinstance(other, list):
-            return QuantumCircuit(self.phase, super().__add__(other))
+            return QuantumCircuit(self.phase, list(self) + other)
         else:
             return NotImplemented
 
-    def __radd__(self, other):
+    def __radd__(self, other: QuantumCircuit | list) -> QuantumCircuit:
         if isinstance(other, QuantumCircuit):
-            return QuantumCircuit(other.phase + self.phase, super().__radd__(other))
+            return QuantumCircuit(other.phase + self.phase, list(other) + list(self))
         elif isinstance(other, list):
-            return QuantumCircuit(self.phase, other.__add__(self))
+            return QuantumCircuit(self.phase, other + list(self))
         else:
             return NotImplemented
 
-    def __iadd__(self, other):
+    def __iadd__(self, other: QuantumCircuit | Iterable) -> QuantumCircuit:
         if isinstance(other, QuantumCircuit):
             self.phase += other.phase
-            super().__iadd__(other)
+            super().__iadd__(list(other))
             return self
-        elif isinstance(other, list):
+        elif isinstance(other, Iterable):
             super().__iadd__(other)
             return self
         else:
             return NotImplemented
 
-    def decompose_phase_gate(self):
+    def decompose_phase_gate(self) -> None:
         self._phase %= 2 * mpmath.mp.pi
 
-        for _ in range(round(float(self._phase / W_PHASE))):
+        for _ in range(round(float(self._phase / w_phase()))):
             self.append(WGate())
 
         self._phase = 0
 
-    def to_matrix(self, num_qubits):
+    def to_matrix(self, num_qubits: int) -> mpmath.matrix:
         U = mpmath.eye(2**num_qubits) * mpmath.exp(1.0j * self._phase)
         for g in self:
             U2 = mpmath.zeros(2**num_qubits)
