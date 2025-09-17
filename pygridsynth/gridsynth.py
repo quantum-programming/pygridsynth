@@ -4,7 +4,7 @@ import warnings
 import mpmath
 
 from .config import GridsynthConfig
-from .diophantine import NO_SOLUTION, diophantine_dyadic
+from .diophantine import Result, diophantine_dyadic
 from .loop_controller import LoopController
 from .mymath import solve_quadratic, sqrt
 from .quantum_gate import Rz
@@ -148,7 +148,7 @@ def _gridsynth_upto_phase_with_fixed_k(tdgp_sets, k, phase, cfg):
             z *= DOmega(ZOmega(0, -1, 1, 0), 1)
         xi = 1 - DRootTwo.fromDOmega(z.conj * z)
         w = diophantine_dyadic(xi, seed=cfg.seed, loop_controller=cfg.loop_controller)
-        if w != NO_SOLUTION:
+        if w != Result.NO_SOLUTION:
             z = z.reduce_denomexp()
             w = w.reduce_denomexp()
             if z.k > w.k:
