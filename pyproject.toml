@@ -24,7 +24,7 @@ dev = [
     "flake8",
     "mypy",
     "black",
-    "isort"
+    "isort",
 ]
 
 [tool.setuptools]
