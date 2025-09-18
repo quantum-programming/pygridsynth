@@ -37,9 +37,6 @@ Or, to install in development (editable) mode
 pip install -e .
 ```
 
-The versions of `pygridsynth` available on pypi do not yet support
-installing an executable in this way.
-
 Once you have installed this executable, you can use `pygridsynth` like this
 
 ```sh
@@ -56,7 +53,7 @@ executable.
 ### Command-Line Example
 
 ```bash
-python -m pygridsynth <theta> <epsilon> [options]
+pygridsynth <theta> <epsilon> [options]
 ```
 
 ### Arguments
@@ -75,22 +72,23 @@ python -m pygridsynth <theta> <epsilon> [options]
 - `--verbose`, `-v`: Enables detailed output.
 - `--time`, `-t`: Measures the execution time.
 - `--showgraph`, `-g`: Displays the decomposition result as a graph.
+- `--upto_phase`, `-ph`: Approximates up to a phase.
 
 ### Example Execution
 
 ```bash
-python -m pygridsynth 0.5 1e-50 --verbose --time
+pygridsynth 0.5 1e-50 --verbose --time
 ```
 
 This command will:
-1. Compute the Clifford+T gate decomposition of a Z-rotation gate with $\theta = 0.5$ and $\epsilon = 0.01$.
-2. Set the calculation precision to 256 decimal places.
-3. Display detailed output and measure the execution time.
+1. Compute the Clifford+T gate decomposition of a Z-rotation gate $R_Z(\theta) = e^{- i \frac{\theta}{2} Z}$ with $\theta = 0.5$ and $\epsilon = 10^{-50}$.
+2. Display detailed output and measure the execution time.
 
 ## Using as a Library
 
 You can also use `pygridsynth` directly in your scripts:
 
+The recommended way is to use **`mpmath.mpf`** to ensure high-precision calculations:
 <!-- mpf -->
 ```python
 import mpmath
@@ -98,12 +96,48 @@ import mpmath
 from pygridsynth.gridsynth import gridsynth_gates
 
 mpmath.mp.dps = 128
-theta = mpmath.mpmathify("0.5")
-epsilon = mpmath.mpmathify("1e-10")
+theta = mpmath.mpf("0.5")
+epsilon = mpmath.mpf("1e-10")
+gates = gridsynth_gates(theta=theta, epsilon=epsilon)
+print(gates)
 
+mpmath.mp.dps = 128
+theta = mpmath.mp.pi / 8
+epsilon = mpmath.mpf("1e-10")
 gates = gridsynth_gates(theta=theta, epsilon=epsilon)
 print(gates)
 ```
+You may also pass strings, which are automatically converted to `mpmath.mpf`.
+<!-- str -->
+```python
+from pygridsynth.gridsynth import gridsynth_gates
+
+theta = "0.5"
+epsilon = "1e-10"
+gates = gridsynth_gates(theta=theta, epsilon=epsilon)
+print(gates)
+```
+
+It is also possible to use **floats**, but beware that floating-point numbers may introduce precision errors.
+Floats should only be used when **high precision is not required**:
+<!-- float -->
+```python
+import numpy as np
+
+from pygridsynth.gridsynth import gridsynth_gates
+
+# Float can be used if high precision is not required
+theta = 0.5
+epsilon = 1e-10
+gates = gridsynth_gates(theta=theta, epsilon=epsilon)
+print(gates)
+
+theta = float(np.pi / 8)
+epsilon = 1e-10
+gates = gridsynth_gates(theta=theta, epsilon=epsilon)
+print(gates)
+```
+
 
 ## Contributing
 
