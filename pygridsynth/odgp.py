@@ -1,10 +1,13 @@
 import itertools
+from typing import Iterator
+
+from pygridsynth.region import Interval
 
 from .mymath import SQRT2, ceil, floor, floorlog, pow_sqrt2
 from .ring import LAMBDA, DRootTwo, ZRootTwo
 
 
-def _solve_ODGP_internal(I, J):
+def _solve_ODGP_internal(I: Interval, J: Interval) -> Iterator[ZRootTwo]:
     if I.width < 0 or J.width < 0:
         return iter([])
     elif I.width > 0 and J.width <= 0:
@@ -16,7 +19,7 @@ def _solve_ODGP_internal(I, J):
             a_min = ceil((I.l + J.l) / 2)
             a_max = floor((I.r + J.r) / 2)
 
-            def gen_sol(a):
+            def gen_sol(a: int) -> Iterator[ZRootTwo]:
                 b_min = ceil(SQRT2() * (a - J.r) / 2)
                 b_max = floor(SQRT2() * (a - J.l) / 2)
                 return map(lambda b: ZRootTwo(a, b), range(b_min, b_max + 1))
@@ -32,7 +35,7 @@ def _solve_ODGP_internal(I, J):
             return map(lambda beta: beta * lambda_inv_n, sol)
 
 
-def solve_ODGP(I, J):
+def solve_ODGP(I: Interval, J: Interval) -> Iterator[ZRootTwo]:
     if I.width < 0 or J.width < 0:
         return iter([])
 
@@ -47,25 +50,29 @@ def solve_ODGP(I, J):
     return sol
 
 
-def solve_ODGP_with_parity(I, J, beta):
+def solve_ODGP_with_parity(
+    I: Interval, J: Interval, beta: ZRootTwo
+) -> Iterator[ZRootTwo]:
     p = beta.parity
     sol = solve_ODGP((I - p) * SQRT2() / 2, (J - p) * (-SQRT2()) / 2)
     sol = map(lambda alpha: alpha * ZRootTwo(0, 1) + p, sol)
     return sol
 
 
-def solve_scaled_ODGP(I, J, k):
+def solve_scaled_ODGP(I: Interval, J: Interval, k: int) -> Iterator[DRootTwo]:
     scale = pow_sqrt2(k)
     sol = solve_ODGP(I * scale, -J * scale if k & 1 else J * scale)
     return map(lambda alpha: DRootTwo(alpha, k), sol)
 
 
-def solve_scaled_ODGP_with_parity(I, J, k, beta):
+def solve_scaled_ODGP_with_parity(
+    I: Interval, J: Interval, k: int, beta: DRootTwo
+) -> Iterator[DRootTwo]:
     if k == 0:
-        sol = solve_ODGP_with_parity(I, J, beta.renew_denomexp(0))
-        return map(lambda alpha: DRootTwo.from_zroottwo(alpha), sol)
+        sol0 = solve_ODGP_with_parity(I, J, beta.renew_denomexp(0).alpha)
+        return map(lambda alpha: DRootTwo.from_zroottwo(alpha), sol0)
     else:
         p = beta.renew_denomexp(k).parity
         offset = DRootTwo.from_int(0) if p == 0 else DRootTwo.power_of_inv_sqrt2(k)
-        sol = solve_scaled_ODGP(I - offset.to_real, J - offset.conj_sq2.to_real, k - 1)
-        return map(lambda alpha: alpha + offset, sol)
+        sol1 = solve_scaled_ODGP(I - offset.to_real, J - offset.conj_sq2.to_real, k - 1)
+        return map(lambda alpha: alpha + offset, sol1)

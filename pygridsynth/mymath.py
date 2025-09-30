@@ -1,37 +1,41 @@
 from itertools import accumulate
+from typing import TypeAlias
 
 import mpmath
 
+RealNum: TypeAlias = int | float | mpmath.mpf
+MPFConvertible: TypeAlias = RealNum | mpmath.mpf
 
-def SQRT2():
+
+def SQRT2() -> mpmath.mpf:
     return mpmath.sqrt(2)
 
 
-def ntz(n):
+def ntz(n: int) -> int:
     return 0 if n == 0 else ((n & -n) - 1).bit_count()
 
 
-def floor(x):
+def floor(x: int | float | mpmath.mpf) -> int:
     return int(mpmath.floor(x, prec=0))
 
 
-def ceil(x):
+def ceil(x: int | float | mpmath.mpf) -> int:
     return int(mpmath.ceil(x, prec=0))
 
 
-def sqrt(x):
+def sqrt(x: int | float | mpmath.mpf) -> mpmath.mpf:
     return mpmath.sqrt(x)
 
 
-def log(x):
+def log(x: int | float | mpmath.mpf) -> mpmath.mpf:
     return mpmath.log(x)
 
 
-def sign(x):
+def sign(x: int | float | mpmath.mpf) -> int:
     return 1 if x > 0 else -1 if x < 0 else 0
 
 
-def floorsqrt(x):
+def floorsqrt(x: int | float | mpmath.mpf) -> int:
     if x < 0:
         raise ValueError
     ok = 0
@@ -45,16 +49,18 @@ def floorsqrt(x):
     return ok
 
 
-def rounddiv(x, y):
+def rounddiv(x: int, y: int) -> int:
     return (x + y // 2) // y if y > 0 else (x - (-y) // 2) // y
 
 
-def pow_sqrt2(k):
+def pow_sqrt2(k: int) -> mpmath.mpf:
     k_div_2, k_mod_2 = k >> 1, k & 1
     return (1 << k_div_2) * SQRT2() if k_mod_2 else 1 << k_div_2
 
 
-def floorlog(x, y):
+def floorlog(
+    x: int | float | mpmath.mpf, y: int | float | mpmath.mpf
+) -> tuple[int, float | mpmath.mpf]:
     if x <= 0:
         raise ValueError("math domain error")
 
@@ -71,10 +77,14 @@ def floorlog(x, y):
         if r > p:
             r /= p
             n += 1
-    return (n, r)
+    return n, r
 
 
-def solve_quadratic(a, b, c):
+def solve_quadratic(
+    a: int | float | mpmath.mpf,
+    b: int | float | mpmath.mpf,
+    c: int | float | mpmath.mpf,
+) -> tuple[mpmath.mpf, mpmath.mpf] | None:
     if a < 0:
         a, b, c = -a, -b, -c
     discriminant = b**2 - 4 * a * c
@@ -85,4 +95,7 @@ def solve_quadratic(a, b, c):
     if b >= 0:
         return (s1 / (2 * a), s2 / (2 * a))
     else:
-        return ((2 * c) / s2, (2 * c) / s1)
+        if c == 0:
+            return (0, -b / a)
+        else:
+            return ((2 * c) / s2, (2 * c) / s1)

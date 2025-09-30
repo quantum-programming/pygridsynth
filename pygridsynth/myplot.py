@@ -1,12 +1,18 @@
+from typing import Iterable
+
+from .region import Ellipse, Rectangle
+from .ring import DOmega
+
+
 def plot_sol(
-    sol_list,
-    ellipseA,
-    ellipseB,
-    bboxA=None,
-    bboxB=None,
-    color_list=None,
-    size_list=None,
-):
+    sol_list: list[Iterable[DOmega]],
+    ellipseA: Ellipse,
+    ellipseB: Ellipse,
+    bboxA: Rectangle | None = None,
+    bboxB: Rectangle | None = None,
+    color_list: list[str] | None = None,
+    size_list: list[float] | None = None,
+) -> None:
     import matplotlib.pyplot as plt
 
     if color_list is None:

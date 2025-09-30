@@ -1,14 +1,17 @@
-from .grid_op import EllipsePair, GridOp
+from .grid_op import GridOp
 from .mymath import floorsqrt, log
 from .myplot import plot_sol
+from .region import ConvexSet, Ellipse, EllipsePair, Rectangle
 from .ring import LAMBDA, ZOmega
 
 
-def _reduction(ellipse_pair, opG_l, opG_r, new_opG):
+def _reduction(
+    ellipse_pair: EllipsePair, opG_l: GridOp, opG_r: GridOp, new_opG: GridOp
+) -> tuple[EllipsePair, GridOp, GridOp, bool]:
     return new_opG * ellipse_pair, opG_l, new_opG * opG_r, False
 
 
-def _shift_ellipse_pair(ellipse_pair, n):
+def _shift_ellipse_pair(ellipse_pair: EllipsePair, n: int) -> EllipsePair:
     lambda_n = LAMBDA**n
     lambda_inv_n = LAMBDA**-n
     ellipse_pair.A.a *= lambda_inv_n.to_real
@@ -20,7 +23,9 @@ def _shift_ellipse_pair(ellipse_pair, n):
     return ellipse_pair
 
 
-def _step_lemma(ellipse_pair, opG_l, opG_r, verbose=False):
+def _step_lemma(
+    ellipse_pair: EllipsePair, opG_l: GridOp, opG_r: GridOp, verbose: bool = False
+) -> tuple[EllipsePair, GridOp, GridOp, bool]:
     A = ellipse_pair.A
     B = ellipse_pair.B
     if verbose:
@@ -93,7 +98,9 @@ def _step_lemma(ellipse_pair, opG_l, opG_r, verbose=False):
         return _reduction(ellipse_pair, opG_l, opG_r, OP_B_n)
 
 
-def _to_upright_ellipse_pair(ellipseA, ellipseB, verbose=False):
+def to_upright_ellipse_pair(
+    ellipseA: Ellipse, ellipseB: Ellipse, verbose: bool = False
+) -> GridOp:
     ellipseA_normalized = ellipseA.normalize()
     ellipseB_normalized = ellipseB.normalize()
     ellipse_pair = EllipsePair(ellipseA_normalized, ellipseB_normalized)
@@ -108,8 +115,15 @@ def _to_upright_ellipse_pair(ellipseA, ellipseB, verbose=False):
     return opG_l * opG_r
 
 
-def to_upright_set_pair(setA, setB, show_graph=False, verbose=False):
-    opG = _to_upright_ellipse_pair(setA.ellipse, setB.ellipse, verbose=verbose)
+def to_upright_set_pair(
+    setA: ConvexSet,
+    setB: ConvexSet,
+    opG: GridOp | None = None,
+    show_graph: bool = False,
+    verbose: bool = False,
+) -> tuple[GridOp, Ellipse, Ellipse, Rectangle, Rectangle]:
+    if opG is None:
+        opG = to_upright_ellipse_pair(setA.ellipse, setB.ellipse, verbose=verbose)
     ellipse_pair = opG * EllipsePair(setA.ellipse, setB.ellipse)
     ellipseA_upright = ellipse_pair.A
     ellipseB_upright = ellipse_pair.B

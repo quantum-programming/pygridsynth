@@ -1,5 +1,14 @@
 from .normal_form import NormalForm
-from .quantum_gate import W_PHASE, HGate, QuantumCircuit, SGate, SXGate, TGate, WGate
+from .quantum_gate import (
+    HGate,
+    QuantumCircuit,
+    QuantumGate,
+    SGate,
+    SXGate,
+    TGate,
+    WGate,
+    w_phase,
+)
 from .ring import OMEGA_POWER
 from .unitary import DOmegaUnitary
 
@@ -7,8 +16,10 @@ BIT_SHIFT = [0, 0, 1, 0, 2, 0, 1, 3, 3, 3, 0, 2, 2, 1, 0, 0]
 BIT_COUNT = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4]
 
 
-def _reduce_denomexp(unitary, wires):
-    def t_power_and_h(m):
+def _reduce_denomexp(
+    unitary: DOmegaUnitary, wires: list[int]
+) -> tuple[list[QuantumGate], DOmegaUnitary]:
+    def t_power_and_h(m: int) -> list[QuantumGate]:
         if m == 0:
             return [HGate(target_qubit=wires[0])]
         elif m == 1:
@@ -21,6 +32,8 @@ def _reduce_denomexp(unitary, wires):
                 SGate(target_qubit=wires[0]),
                 HGate(target_qubit=wires[0]),
             ]
+        else:
+            raise ValueError
 
     residue_z = unitary.z.residue
     residue_w = unitary.w.residue
@@ -48,9 +61,13 @@ def _reduce_denomexp(unitary, wires):
         else:
             unitary = unitary.mul_by_H_and_T_power_from_left(-m)
             return t_power_and_h(m), unitary
+    else:
+        raise ValueError
 
 
-def decompose_domega_unitary(unitary, wires, decompose_phase_gate=True):
+def decompose_domega_unitary(
+    unitary: DOmegaUnitary, wires: list[int], upto_phase: bool = False
+) -> QuantumCircuit:
     circuit = QuantumCircuit()
     while unitary.k > 0:
         g, unitary = _reduce_denomexp(unitary, wires=wires)
@@ -74,11 +91,11 @@ def decompose_domega_unitary(unitary, wires, decompose_phase_gate=True):
     for _ in range(m_S):
         circuit.append(SGate(target_qubit=wires[0]))
     unitary = unitary.mul_by_S_power_from_left(-m_S)
-    if decompose_phase_gate:
+    if not upto_phase:
         for _ in range(m_W):
             circuit.append(WGate())
     else:
-        circuit.phase = m_W * W_PHASE
+        circuit.phase = m_W * w_phase()
 
     assert unitary == DOmegaUnitary.identity(), "decomposition failed..."
     circuit = NormalForm.from_circuit(circuit).to_circuit(wires=wires)
