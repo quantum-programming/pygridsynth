@@ -58,7 +58,8 @@ def test_readme_examples_match_files():
             print(f"✓ README example '{identifier}' matches examples/{identifier}.py")
         except FileNotFoundError:
             pytest.fail(
-                f"Example file examples/{identifier}.py not found for README example '{identifier}'"
+                f"Example file examples/{identifier}.py not found"
+                f"for README example '{identifier}'"
             )
 
 

@@ -1,6 +1,19 @@
+from __future__ import annotations
+
 from enum import Enum
 
-from .quantum_gate import HGate, QuantumCircuit, SGate, SXGate, TGate, WGate
+import mpmath
+
+from .mymath import RealNum
+from .quantum_gate import (
+    HGate,
+    QuantumCircuit,
+    QuantumGate,
+    SGate,
+    SXGate,
+    TGate,
+    WGate,
+)
 
 
 class Axis(Enum):
@@ -80,7 +93,7 @@ TCONJ_TABLE = [
 
 
 class Clifford:
-    def __init__(self, a, b, c, d):
+    def __init__(self, a: int, b: int, c: int, d: int) -> None:
         if a >= 3 or a < 0:
             a %= 3
         if b >= 2 or b < 0:
@@ -89,35 +102,35 @@ class Clifford:
             c &= 0b11
         if d >= 8 or d < 0:
             d &= 0b111
-        self._a = a
-        self._b = b
-        self._c = c
-        self._d = d
+        self._a: int = a
+        self._b: int = b
+        self._c: int = c
+        self._d: int = d
 
     @property
-    def a(self):
+    def a(self) -> int:
         return self._a
 
     @property
-    def b(self):
+    def b(self) -> int:
         return self._b
 
     @property
-    def c(self):
+    def c(self) -> int:
         return self._c
 
     @property
-    def d(self):
+    def d(self) -> int:
         return self._d
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Clifford({self._a}, {self._b}, {self._c}, {self._d})"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"E^{self._a} X^{self._b} S^{self._c} ω^{self._d}"
 
     @classmethod
-    def from_str(cls, g):
+    def from_str(cls, g: str) -> Clifford:
         if g == "H":
             return CLIFFORD_H
         elif g == "S":
@@ -130,7 +143,7 @@ class Clifford:
             raise ValueError
 
     @classmethod
-    def from_gate(cls, g):
+    def from_gate(cls, g: QuantumGate) -> Clifford:
         if isinstance(g, HGate):
             return CLIFFORD_H
         elif isinstance(g, SGate):
@@ -142,8 +155,8 @@ class Clifford:
         else:
             raise ValueError
 
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
+    def __eq__(self, other: Clifford | object) -> bool:
+        if isinstance(other, Clifford):
             return (
                 self._a == other.a
                 and self._b == other.b
@@ -154,50 +167,52 @@ class Clifford:
             return False
 
     @classmethod
-    def _conj2(cls, c, b):
+    def _conj2(cls, c: int, b: int) -> tuple[int, int]:
         return CONJ2_TABLE[c << 1 | b]
 
     @classmethod
-    def _conj3(cls, b, c, a):
+    def _conj3(cls, b: int, c: int, a: int) -> tuple[int, int, int, int]:
         return CONJ3_TABLE[a << 3 | b << 2 | c]
 
     @classmethod
-    def _cinv(cls, a, b, c):
+    def _cinv(cls, a: int, b: int, c: int) -> tuple[int, int, int, int]:
         return CINV_TABLE[a << 3 | b << 2 | c]
 
     @classmethod
-    def _tconj(cls, a, b):
+    def _tconj(cls, a: int, b: int) -> tuple[Axis, int, int]:
         return TCONJ_TABLE[a << 1 | b]
 
-    def __mul__(self, other):
-        if isinstance(other, self.__class__):
-            a1, b1, c1, d1 = self.__class__._conj3(self._b, self._c, other.a)
-            c2, d2 = self.__class__._conj2(c1, other.b)
+    def __mul__(self, other: Clifford) -> Clifford:
+        if isinstance(other, Clifford):
+            a1, b1, c1, d1 = Clifford._conj3(self._b, self._c, other.a)
+            c2, d2 = Clifford._conj2(c1, other.b)
             new_a = self._a + a1
             new_b = b1 + other.b
             new_c = c2 + other.c
             new_d = d2 + d1 + self._d + other.d
-            return self.__class__(new_a, new_b, new_c, new_d)
+            return Clifford(new_a, new_b, new_c, new_d)
         else:
             return NotImplemented
 
-    def inv(self):
-        a1, b1, c1, d1 = self.__class__._cinv(self._a, self._b, self._c)
-        return self.__class__(a1, b1, c1, d1 - self._d)
+    def inv(self) -> Clifford:
+        a1, b1, c1, d1 = Clifford._cinv(self._a, self._b, self._c)
+        return Clifford(a1, b1, c1, d1 - self._d)
 
-    def decompose_coset(self):
+    def decompose_coset(self) -> tuple[Axis, Clifford]:
         if self._a == 0:
             return Axis.I, self
         elif self._a == 1:
             return Axis.H, CLIFFORD_H.inv() * self
         elif self._a == 2:
             return Axis.SH, CLIFFORD_SH.inv() * self
+        else:
+            raise ValueError
 
-    def decompose_tconj(self):
-        axis, c1, d1 = self.__class__._tconj(self._a, self._b)
-        return axis, self.__class__(0, self._b, c1 + self._c, d1 + self._d)
+    def decompose_tconj(self) -> tuple[Axis, Clifford]:
+        axis, c1, d1 = Clifford._tconj(self._a, self._b)
+        return axis, Clifford(0, self._b, c1 + self._c, d1 + self._d)
 
-    def to_circuit(self, wires):
+    def to_circuit(self, wires: list[int]) -> QuantumCircuit:
         axis, c = self.decompose_coset()
         circuit = QuantumCircuit()
         if axis == Axis.H:
@@ -215,44 +230,44 @@ class Clifford:
 
 
 class NormalForm:
-    def __init__(self, syllables, c, phase=0):
-        self._syllables = syllables
-        self._c = c
-        self._phase = phase
+    def __init__(self, syllables: list[Syllable], c: Clifford, phase: RealNum = 0):
+        self._syllables: list[Syllable] = syllables
+        self._c: Clifford = c
+        self._phase: mpmath.mpf = mpmath.mpf(phase) % (2 * mpmath.mp.pi)
 
     @property
-    def syllables(self):
+    def syllables(self) -> list[Syllable]:
         return self._syllables
 
     @property
-    def c(self):
+    def c(self) -> Clifford:
         return self._c
 
     @c.setter
-    def c(self, c):
+    def c(self, c: Clifford) -> None:
         self._c = c
 
     @property
-    def phase(self):
+    def phase(self) -> mpmath.mpf:
         return self._phase
 
     @phase.setter
-    def phase(self, phase):
-        self._phase = phase
+    def phase(self, phase: RealNum) -> None:
+        self._phase = mpmath.mpf(phase) % (2 * mpmath.mp.pi)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"NormalForm({repr(self._syllables)}, {repr(self._c)}, {repr(self._phase)})"
         )
 
-    def _append_gate(self, g):
+    def _append_gate(self, g: QuantumGate) -> None:
         if isinstance(g, TGate):
             axis, new_c = self.c.decompose_tconj()
             if axis == Axis.I:
                 if len(self._syllables) == 0:
                     self._syllables.append(Syllable.T)
                 elif self._syllables[-1] == Syllable.T:
-                    self._syllables[-1].pop()
+                    self._syllables.pop()
                     self.c = CLIFFORD_S * new_c
                 elif self._syllables[-1] == Syllable.HT:
                     self._syllables.pop()
@@ -270,13 +285,13 @@ class NormalForm:
             self.c *= Clifford.from_gate(g)
 
     @classmethod
-    def from_circuit(cls, circuit):
+    def from_circuit(cls, circuit: QuantumCircuit) -> NormalForm:
         normal_form = NormalForm([], CLIFFORD_I, phase=circuit.phase)
         for g in circuit:
             normal_form._append_gate(g)
         return normal_form
 
-    def to_circuit(self, wires):
+    def to_circuit(self, wires: list[int]) -> QuantumCircuit:
         circuit = QuantumCircuit(phase=self.phase)
         for syllable in self._syllables:
             if syllable == Syllable.T:
