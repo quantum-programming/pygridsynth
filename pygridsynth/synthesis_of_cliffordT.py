@@ -1,3 +1,4 @@
+from .d_omega_unitary import DOmegaUnitary
 from .normal_form import NormalForm
 from .quantum_gate import (
     HGate,
@@ -10,7 +11,6 @@ from .quantum_gate import (
     w_phase,
 )
 from .ring import OMEGA_POWER
-from .unitary import DOmegaUnitary
 
 BIT_SHIFT = [0, 0, 1, 0, 2, 0, 1, 3, 3, 3, 0, 2, 2, 1, 0, 0]
 BIT_COUNT = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4]

@@ -4,6 +4,7 @@ import warnings
 import mpmath
 
 from .config import GridsynthConfig
+from .d_omega_unitary import DOmegaUnitary
 from .diophantine import Result, diophantine_dyadic
 from .grid_op import GridOp
 from .mymath import MPFConvertible, RealNum, solve_quadratic, sqrt
@@ -13,7 +14,6 @@ from .ring import DOmega, DRootTwo, ZOmega, ZRootTwo
 from .synthesis_of_cliffordT import decompose_domega_unitary
 from .tdgp import solve_TDGP
 from .to_upright import to_upright_ellipse_pair, to_upright_set_pair
-from .unitary import DOmegaUnitary
 
 
 class EpsilonRegion(ConvexSet):
