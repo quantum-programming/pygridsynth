@@ -93,7 +93,7 @@ def _step_lemma(ellipse_pair, opG_l, opG_r, verbose=False):
         return _reduction(ellipse_pair, opG_l, opG_r, OP_B_n)
 
 
-def _to_upright_ellipse_pair(ellipseA, ellipseB, verbose=False):
+def to_upright_ellipse_pair(ellipseA, ellipseB, verbose=False):
     ellipseA_normalized = ellipseA.normalize()
     ellipseB_normalized = ellipseB.normalize()
     ellipse_pair = EllipsePair(ellipseA_normalized, ellipseB_normalized)
@@ -108,8 +108,9 @@ def _to_upright_ellipse_pair(ellipseA, ellipseB, verbose=False):
     return opG_l * opG_r
 
 
-def to_upright_set_pair(setA, setB, show_graph=False, verbose=False):
-    opG = _to_upright_ellipse_pair(setA.ellipse, setB.ellipse, verbose=verbose)
+def to_upright_set_pair(setA, setB, opG=None, show_graph=False, verbose=False):
+    if opG is None:
+        opG = to_upright_ellipse_pair(setA.ellipse, setB.ellipse, verbose=verbose)
     ellipse_pair = opG * EllipsePair(setA.ellipse, setB.ellipse)
     ellipseA_upright = ellipse_pair.A
     ellipseB_upright = ellipse_pair.B

@@ -85,4 +85,7 @@ def solve_quadratic(a, b, c):
     if b >= 0:
         return (s1 / (2 * a), s2 / (2 * a))
     else:
-        return ((2 * c) / s2, (2 * c) / s1)
+        if c == 0:
+            return (0, -b / a)
+        else:
+            return ((2 * c) / s2, (2 * c) / s1)
