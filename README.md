@@ -72,7 +72,7 @@ pygridsynth <theta> <epsilon> [options]
 - `--verbose`, `-v`: Enables detailed output.
 - `--time`, `-t`: Measures the execution time.
 - `--showgraph`, `-g`: Displays the decomposition result as a graph.
-- `--upto_phase`, `-ph`: Approximates up to a phase.
+- `--up-to-phase`, `-ph`: Approximates up to a phase.
 
 ### Example Execution
 

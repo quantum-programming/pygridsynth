@@ -32,7 +32,7 @@ def main() -> str:
     parser.add_argument("--verbose", "-v", action="store_true")
     parser.add_argument("--time", "-t", action="store_true")
     parser.add_argument("--showgraph", "-g", action="store_true")
-    parser.add_argument("--upto_phase", "-ph", action="store_true")
+    parser.add_argument("--up-to-phase", "-ph", action="store_true")
     args = parser.parse_args()
 
     cfg_args = dict()
@@ -54,8 +54,8 @@ def main() -> str:
         cfg_args["measure_time"] = args.time
     if args.showgraph:
         cfg_args["show_graph"] = args.showgraph
-    if args.upto_phase:
-        cfg_args["upto_phase"] = args.upto_phase
+    if args.up_to_phase:
+        cfg_args["up_to_phase"] = args.up_to_phase
 
     cfg = GridsynthConfig(**cfg_args)
 

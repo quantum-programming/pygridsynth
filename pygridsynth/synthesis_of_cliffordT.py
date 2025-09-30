@@ -66,7 +66,7 @@ def _reduce_denomexp(
 
 
 def decompose_domega_unitary(
-    unitary: DOmegaUnitary, wires: list[int], upto_phase: bool = False
+    unitary: DOmegaUnitary, wires: list[int], up_to_phase: bool = False
 ) -> QuantumCircuit:
     circuit = QuantumCircuit()
     while unitary.k > 0:
@@ -91,7 +91,7 @@ def decompose_domega_unitary(
     for _ in range(m_S):
         circuit.append(SGate(target_qubit=wires[0]))
     unitary = unitary.mul_by_S_power_from_left(-m_S)
-    if not upto_phase:
+    if not up_to_phase:
         for _ in range(m_W):
             circuit.append(WGate())
     else:

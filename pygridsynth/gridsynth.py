@@ -154,7 +154,7 @@ def get_synthesized_unitary(
         return DOmegaUnitary.from_gates(gates).to_complex_matrix
 
 
-def _gridsynth_upto_phase_with_fixed_k(
+def _gridsynth_up_to_phase_with_fixed_k(
     tdgp_sets: tuple[
         ConvexSet, ConvexSet, GridOp, Ellipse, Ellipse, Rectangle, Rectangle
     ],
@@ -235,7 +235,7 @@ def _gridsynth_exact(
         time_of_solve_TDGP = 0.0
         time_of_diophantine_dyadic = 0.0
         while True:
-            u_approx, time1, time2 = _gridsynth_upto_phase_with_fixed_k(
+            u_approx, time1, time2 = _gridsynth_up_to_phase_with_fixed_k(
                 tdgp_sets,
                 k,
                 has_phase=False,
@@ -259,7 +259,7 @@ def _gridsynth_exact(
         return u_approx
 
 
-def _gridsynth_upto_phase(
+def _gridsynth_up_to_phase(
     theta: mpmath.mpf, epsilon: mpmath.mpf, cfg: GridsynthConfig
 ) -> DOmegaUnitary:
     with mpmath.workdps(cfg.dps):
@@ -300,7 +300,7 @@ def _gridsynth_upto_phase(
         time_of_solve_TDGP = 0.0
         time_of_diophantine_dyadic = 0.0
         while True:
-            u_approx, time1, time2 = _gridsynth_upto_phase_with_fixed_k(
+            u_approx, time1, time2 = _gridsynth_up_to_phase_with_fixed_k(
                 tdgp_sets1 if has_phase else tdgp_sets0,
                 k,
                 has_phase=has_phase,
@@ -381,8 +381,8 @@ def gridsynth(
         theta = mpmath.mpf(theta)
         epsilon = mpmath.mpf(epsilon)
 
-        if cfg.upto_phase:
-            return _gridsynth_upto_phase(theta, epsilon, cfg=cfg)
+        if cfg.up_to_phase:
+            return _gridsynth_up_to_phase(theta, epsilon, cfg=cfg)
         else:
             return _gridsynth_exact(theta, epsilon, cfg=cfg)
 
@@ -411,7 +411,7 @@ def gridsynth_circuit(
 
         start = time.time() if cfg.measure_time else 0.0
         circuit = decompose_domega_unitary(
-            u_approx, wires=wires, upto_phase=cfg.upto_phase
+            u_approx, wires=wires, up_to_phase=cfg.up_to_phase
         )
         if u_approx.n != 0:
             circuit.phase = (circuit.phase + mpmath.mp.pi / 8) % (2 * mpmath.mp.pi)

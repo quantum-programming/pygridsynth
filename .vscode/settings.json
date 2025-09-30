@@ -43,6 +43,7 @@
         "mymath",
         "mypy",
         "newsynth",
+        "numpy",
         "orangered",
         "prec",
         "pygridsynth",
