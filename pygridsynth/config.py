@@ -14,7 +14,7 @@ class GridsynthConfig:
     verbose: bool = False
     measure_time: bool = False
     show_graph: bool = False
-    upto_phase: bool = False
+    up_to_phase: bool = False
 
     loop_controller: LoopController = field(init=False)
 
