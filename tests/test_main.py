@@ -6,7 +6,7 @@ import pytest
 from pygridsynth.__main__ import main
 
 
-def test_main_deterministic_results():
+def test_main_deterministic_results(capsys):
     """Test that main function returns the same result for identical inputs"""
     # pi/8 ≈ 0.39269908169
     test_args = ["pygridsynth", "0.39269908169", "0.01"]
@@ -16,8 +16,9 @@ def test_main_deterministic_results():
         with patch("sys.argv", test_args):
             original_dps = mpmath.mp.dps
             try:
-                result = main()
-                results.append(str(result))
+                main()
+                captured = capsys.readouterr()
+                results.append(captured.out.strip())
             finally:
                 mpmath.mp.dps = original_dps
 
@@ -25,7 +26,7 @@ def test_main_deterministic_results():
     print(f"✓ Got the same result from 5 executions: {results[0]}")
 
 
-def test_main_with_different_inputs():
+def test_main_with_different_inputs(capsys):
     """Test that main function works correctly with different inputs"""
     test_cases = [
         ["pygridsynth", "0.78539816339", "0.1"],  # pi/4
@@ -38,7 +39,9 @@ def test_main_with_different_inputs():
         with patch("sys.argv", test_args):
             original_dps = mpmath.mp.dps
             try:
-                result = main()
+                main()
+                captured = capsys.readouterr()
+                result = captured.out.strip()
                 results.append(result)
                 assert result is not None, f"Result is None for args {test_args}"
             finally:
@@ -47,7 +50,7 @@ def test_main_with_different_inputs():
     print(f"✓ Successfully executed with {len(test_cases)} different inputs")
 
 
-def test_main_consistency_with_options():
+def test_main_consistency_with_options(capsys):
     """Test that consistent results are obtained even with options"""
     test_args = [
         "pygridsynth",
@@ -65,8 +68,9 @@ def test_main_consistency_with_options():
         with patch("sys.argv", test_args):
             original_dps = mpmath.mp.dps
             try:
-                result = main()
-                results.append(str(result))
+                main()
+                captured = capsys.readouterr()
+                results.append(captured.out.strip())
             finally:
                 mpmath.mp.dps = original_dps
 

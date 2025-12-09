@@ -19,7 +19,7 @@ helps = {
 }
 
 
-def main() -> str:
+def main() -> None:
     parser = argparse.ArgumentParser()
 
     parser.add_argument("theta", type=str)
@@ -46,7 +46,7 @@ def main() -> str:
     if args.dloop is not None:
         cfg_args["dloop"] = args.dloop
     if args.floop is not None:
-        cfg_args["floop"] = args
+        cfg_args["floop"] = args.floop
     if args.seed is not None:
         cfg_args["seed"] = args.seed
     if args.verbose:
@@ -61,4 +61,5 @@ def main() -> str:
     cfg = GridsynthConfig(**cfg_args)
 
     gates = gridsynth_gates(theta=args.theta, epsilon=args.epsilon, cfg=cfg)
-    return gates
+
+    print(gates)
