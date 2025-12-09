@@ -32,7 +32,8 @@ repos:
         name: pytest
         entry: bash -c 'PYTHONPATH=./ .venv/bin/pytest tests'
         language: system
-        types: [python]
+        pass_filenames: false
+        always_run: true
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:

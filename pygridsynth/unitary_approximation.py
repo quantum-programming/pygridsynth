@@ -59,9 +59,11 @@ def _generate_epsilon_interval(theta: mpmath.mpf, epsilon: mpmath.mpf) -> Interv
     if -epsilon <= theta <= epsilon:
         r = 1
     if mpmath.mp.pi - epsilon / 2 <= theta / 2 <= mpmath.mp.pi + epsilon / 2:
-        l = -1
+        r = 1
     if -mpmath.mp.pi - epsilon / 2 <= theta / 2 <= -mpmath.mp.pi + epsilon / 2:
-        l = -1
+        r = 1
+    if mpmath.mp.pi / 2 - epsilon / 2 <= theta / 2 <= mpmath.mp.pi / 2 + epsilon / 2:
+        l = 0
 
     return Interval(l, r)
 
