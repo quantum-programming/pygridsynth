@@ -1,10 +1,52 @@
+import warnings
 from itertools import accumulate
 from typing import TypeAlias
 
 import mpmath
+import numpy as np
 
 RealNum: TypeAlias = int | float | mpmath.mpf
 MPFConvertible: TypeAlias = RealNum | mpmath.mpf
+
+
+def dps_for_epsilon(epsilon: MPFConvertible) -> int:
+    e = mpmath.mpf(epsilon)
+    k = -mpmath.log10(e)
+    return int(15 + 2.5 * int(mpmath.ceil(k)))  # used in newsynth
+
+
+def convert_theta_and_epsilon(
+    theta: MPFConvertible, epsilon: MPFConvertible, dps: int
+) -> tuple[mpmath.mpf, mpmath.mpf]:
+    if isinstance(theta, float):
+        warnings.warn(
+            (
+                f"pygridsynth is synthesizing the angle {theta}. "
+                "Please verify that this is the intended value. "
+                "Using float may introduce precision errors; "
+                "consider using mpmath.mpf for exact precision."
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+
+    if isinstance(epsilon, float):
+        warnings.warn(
+            (
+                f"pygridsynth is using epsilon={epsilon} as the tolerance. "
+                "Please verify that this is the intended value. "
+                "Using float may introduce precision errors; "
+                "consider using mpmath.mpf for exact precision."
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+
+    with mpmath.workdps(dps):
+        theta_mpf = mpmath.mpf(theta)
+        epsilon_mpf = mpmath.mpf(epsilon)
+
+    return theta_mpf, epsilon_mpf
 
 
 def SQRT2() -> mpmath.mpf:
@@ -99,3 +141,29 @@ def solve_quadratic(
             return (0, -b / a)
         else:
             return ((2 * c) / s2, (2 * c) / s1)
+
+
+def trace(M: mpmath.matrix) -> mpmath.mpf:
+    return sum(M[i, i] for i in range(min(M.rows, M.cols)))
+
+
+def kron(A: mpmath.matrix, B: mpmath.matrix) -> mpmath.matrix:
+    return mpmath.matrix(np.kron(A.tolist(), B.tolist()))
+
+
+def all_close(
+    A: mpmath.matrix, B: mpmath.matrix, tol: mpmath.mpf = mpmath.mpf("1e-5")
+) -> bool:
+    return mpmath.norm(mpmath.matrix(A - B), p="inf") < tol
+
+
+def einsum(subscripts: str, *operands: np.ndarray) -> np.ndarray:
+    return np.einsum(subscripts, *operands)
+
+
+def from_matrix_to_tensor(mat: list[list], n) -> np.ndarray:
+    return np.array(mat, dtype=object).reshape([2] * n * 2)
+
+
+def from_tensor_to_matrix(mat: np.ndarray, n) -> list[list]:
+    return mat.reshape((2**n, 2**n)).tolist()

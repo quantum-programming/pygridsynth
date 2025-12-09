@@ -69,7 +69,7 @@ pygridsynth <theta> <epsilon> [options]
 - `--dloop`, `-dl`: Maximum number of failed integer factoring attempts allowed during Diophantine equation solving (default: `10`).
 - `--floop`, `-fl`: Maximum number of failed integer factoring attempts allowed during the factoring process (default: `10`).
 - `--seed`: Random seed for deterministic results.(default: `0`)
-- `--verbose`, `-v`: Enables detailed output.
+- `--verbose`, `-v`: Verbosity level (0=silent, 1=basic, 2=detailed, 3=debug).(default: `0`)
 - `--time`, `-t`: Measures the execution time.
 - `--showgraph`, `-g`: Displays the decomposition result as a graph.
 - `--up-to-phase`, `-ph`: Approximates up to a phase.

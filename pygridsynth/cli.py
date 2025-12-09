@@ -15,6 +15,7 @@ helps = {
         "allowed during the factoring process"
     ),
     "seed": "Random seed for deterministic results",
+    "verbose": "Verbosity level (0=silent, 1=basic, 2=detailed, 3=debug)",
 }
 
 
@@ -29,7 +30,7 @@ def main() -> str:
     parser.add_argument("--dloop", "-dl", type=int, help=helps["dl"])
     parser.add_argument("--floop", "-fl", type=int, help=helps["fl"])
     parser.add_argument("--seed", type=int, help=helps["seed"])
-    parser.add_argument("--verbose", "-v", action="store_true")
+    parser.add_argument("--verbose", "-v", type=int)
     parser.add_argument("--time", "-t", action="store_true")
     parser.add_argument("--showgraph", "-g", action="store_true")
     parser.add_argument("--up-to-phase", "-ph", action="store_true")

@@ -11,7 +11,7 @@ class GridsynthConfig:
     floop: int = 10
     dtimeout: float | None = None
     ftimeout: float | None = None
-    verbose: bool = False
+    verbose: int = 0
     measure_time: bool = False
     show_graph: bool = False
     up_to_phase: bool = False

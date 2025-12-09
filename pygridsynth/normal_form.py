@@ -5,15 +5,8 @@ from enum import Enum
 import mpmath
 
 from .mymath import RealNum
-from .quantum_gate import (
-    HGate,
-    QuantumCircuit,
-    QuantumGate,
-    SGate,
-    SXGate,
-    TGate,
-    WGate,
-)
+from .quantum_circuit import QuantumCircuit
+from .quantum_gate import HGate, QuantumGate, SGate, SXGate, TGate, WGate
 
 
 class Axis(Enum):

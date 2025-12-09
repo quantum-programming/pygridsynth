@@ -49,7 +49,15 @@ def test_main_with_different_inputs():
 
 def test_main_consistency_with_options():
     """Test that consistent results are obtained even with options"""
-    test_args = ["pygridsynth", "0.39269908169", "0.01", "--dps", "30", "--verbose"]
+    test_args = [
+        "pygridsynth",
+        "0.39269908169",
+        "0.01",
+        "--dps",
+        "30",
+        "--verbose",
+        "1",
+    ]
     results = []
 
     # Execute 3 times with the same arguments
