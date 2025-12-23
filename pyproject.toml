@@ -16,6 +16,10 @@ dependencies = [
     "mpmath>=1.3",
     "setuptools",
     "matplotlib",
+    "numpy",
+    "scipy",
+    "cvxpy",
+    "numba",
 ]
 
 [project.optional-dependencies]

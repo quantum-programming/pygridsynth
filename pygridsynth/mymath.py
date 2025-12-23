@@ -167,3 +167,22 @@ def from_matrix_to_tensor(mat: list[list], n) -> np.ndarray:
 
 def from_tensor_to_matrix(mat: np.ndarray, n) -> list[list]:
     return mat.reshape((2**n, 2**n)).tolist()
+
+
+def random_su(n: int) -> mpmath.matrix:
+    """
+    Generate a random SU(n) unitary matrix.
+
+    Args:
+        n: Number of qubits.
+
+    Returns:
+        Random SU(2^n) unitary matrix.
+    """
+    dim = 2**n
+    z = mpmath.matrix(np.random.random_sample((dim, dim))) + 1j * mpmath.matrix(
+        np.random.random_sample((dim, dim))
+    ) / mpmath.sqrt(2)
+    q, _ = mpmath.qr(z)
+    q /= mpmath.det(q) ** (1 / dim)
+    return q

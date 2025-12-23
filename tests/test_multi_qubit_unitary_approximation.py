@@ -83,3 +83,8 @@ def test_approximate_multi_qubit_unitary_config_handling():
         )
 
     approximate_multi_qubit_unitary(U, num_qubits, epsilon, verbose=1)
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
+    print("All tests passed successfully!")
