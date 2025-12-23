@@ -138,6 +138,160 @@ gates = gridsynth_gates(theta=theta, epsilon=epsilon)
 print(gates)
 ```
 
+### Multi-Qubit Unitary Approximation
+
+`pygridsynth` provides functionality for approximating multi-qubit unitary matrices using the Clifford+T gate set. This is useful for synthesizing quantum circuits that implement arbitrary multi-qubit unitaries.
+
+**Basic usage:**
+<!-- multi_qubit_basic -->
+```python
+import mpmath
+
+from pygridsynth.multi_qubit_unitary_approximation import (
+    approximate_multi_qubit_unitary,
+)
+
+# Define a target unitary matrix (example: 2-qubit identity)
+num_qubits = 2
+U = mpmath.eye(2**num_qubits)  # 4x4 identity matrix
+epsilon = "1e-10"
+
+# Approximate the unitary
+circuit, U_approx = approximate_multi_qubit_unitary(U, num_qubits, epsilon)
+
+print(f"Circuit length: {len(circuit)}")
+print(f"Circuit: {str(circuit)}")
+```
+
+**Using with random unitary:**
+<!-- multi_qubit_random -->
+```python
+from pygridsynth.multi_qubit_unitary_approximation import (
+    approximate_multi_qubit_unitary,
+)
+from pygridsynth.mymath import random_su
+
+# Generate a random SU(2^n) unitary
+num_qubits = 2
+U = random_su(num_qubits)
+epsilon = "1e-10"
+
+# Approximate with high precision
+circuit, U_approx = approximate_multi_qubit_unitary(U, num_qubits, epsilon)
+```
+
+**Returning DOmegaMatrix:**
+<!-- multi_qubit_domega -->
+```python
+from pygridsynth.multi_qubit_unitary_approximation import (
+    approximate_multi_qubit_unitary,
+)
+from pygridsynth.mymath import random_su
+
+# Generate a random SU(2^n) unitary
+num_qubits = 2
+U = random_su(num_qubits)
+epsilon = "1e-10"
+
+# Return DOmegaMatrix instead of mpmath.matrix for more efficient representation
+circuit, U_domega = approximate_multi_qubit_unitary(
+    U, num_qubits, epsilon, return_domega_matrix=True
+)
+
+# Convert to complex matrix if needed
+U_complex = U_domega.to_complex_matrix
+```
+
+**Parameters:**
+
+- `U`: Target unitary matrix (`mpmath.matrix`)
+- `num_qubits`: Number of qubits
+- `epsilon`: Error tolerance (can be `str`, `float`, or `mpmath.mpf`)
+- `return_domega_matrix`: If `True`, returns `DOmegaMatrix`; if `False`, returns `mpmath.matrix` (default: `False`)
+- `scale_epsilon`: Whether to scale epsilon based on the number of qubits (default: `True`)
+- `cfg`: Optional `GridsynthConfig` object for advanced configuration
+- `**kwargs`: Additional configuration options (ignored if `cfg` is provided)
+
+**Returns:**
+
+A tuple of `(circuit, U_approx)`:
+- `circuit`: `QuantumCircuit` object representing the Clifford+T decomposition
+- `U_approx`: Approximated unitary matrix (`mpmath.matrix` or `DOmegaMatrix` depending on `return_domega_matrix`)
+
+### Mixed Unitary Synthesis
+
+`pygridsynth` also provides functionality for mixed unitary synthesis, which approximates a target unitary by mixing multiple perturbed unitaries. This is useful for reducing the number of T-gates in quantum circuits.
+
+The library provides two versions: `mixed_synthesis_parallel` (for parallel execution) and `mixed_synthesis_sequential` (for sequential execution).
+
+**Basic usage with mpmath.matrix:**
+<!-- mixed_synthesis_sequential -->
+```python
+from pygridsynth.mixed_synthesis import (
+    compute_diamond_norm_error,
+    mixed_synthesis_sequential,
+)
+from pygridsynth.mymath import random_su
+
+# Generate a random SU(2^n) unitary matrix
+num_qubits = 2
+unitary = random_su(num_qubits)
+
+# Parameters
+eps = 1e-4  # Error tolerance
+M = 64  # Number of Hermitian operators for perturbation
+seed = 123  # Random seed for reproducibility
+
+# Compute mixed synthesis (sequential version)
+result = mixed_synthesis_sequential(unitary, num_qubits, eps, M, seed=seed)
+
+if result is not None:
+    circuit_list, eu_np_list, probs_gptm, u_choi, u_choi_opt = result
+    print(f"Number of circuits: {len(circuit_list)}")
+    print(f"Mixing probabilities: {probs_gptm}")
+    error = compute_diamond_norm_error(u_choi, u_choi_opt, eps)
+    print(f"error: {error}")
+```
+
+**Using parallel version:**
+<!-- mixed_synthesis_parallel -->
+```python
+import mpmath
+
+from pygridsynth.mixed_synthesis import mixed_synthesis_parallel
+
+# Generate a random SU(2^n) unitary matrix
+num_qubits = 2
+unitary = mpmath.eye(2**num_qubits)
+
+# Parameters
+eps = 1e-4  # Error tolerance
+M = 64  # Number of Hermitian operators for perturbation
+seed = 123  # Random seed for reproducibility
+
+# For faster computation with multiple cores
+result = mixed_synthesis_parallel(unitary, num_qubits, eps, M, seed=seed)
+```
+
+**Parameters:**
+
+- `unitary`: Target unitary matrix (`mpmath.matrix` or `numpy.ndarray`)
+- `num_qubits`: Number of qubits
+- `eps`: Error tolerance parameter
+- `M`: Number of Hermitian operators for perturbation
+- `seed`: Random seed for reproducibility (default: `123`)
+- `dps`: Decimal precision (default: `-1` for auto-calculation)
+
+**Returns:**
+
+A tuple of `(circuit_list, eu_np_list, probs_gptm, u_choi_opt)` or `None` on failure:
+- `circuit_list`: List of `QuantumCircuit` objects for perturbed unitaries
+- `eu_np_list`: List of approximated unitary matrices (numpy arrays)
+- `probs_gptm`: Array of mixing probabilities
+- `u_choi_opt`: Optimal mixed Choi matrix
+
+**Note:** The parallel version (`mixed_synthesis_parallel`) uses multiprocessing and may be faster for large `M` values, while the sequential version (`mixed_synthesis_sequential`) is more suitable for debugging or when parallel execution is not desired.
+
 
 ## Contributing
 

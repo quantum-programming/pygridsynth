@@ -306,7 +306,10 @@ def mixed_synthesis_parallel(
     M: int,
     seed: int = 123,
     dps: int = -1,
-) -> tuple[list[QuantumCircuit], list[np.ndarray], np.ndarray, np.ndarray] | None:
+) -> (
+    tuple[list[QuantumCircuit], list[np.ndarray], np.ndarray, np.ndarray, np.ndarray]
+    | None
+):
     """
     Compute mixed probabilities for mixed unitary synthesis (parallel version).
 
@@ -319,16 +322,18 @@ def mixed_synthesis_parallel(
         dps: Decimal precision (default: -1 for auto).
 
     Returns:
-        Tuple of (circuit_list, eu_np_list, probs_gptm, u_choi_opt), or None on failure.
+        Tuple of (circuit_list, eu_np_list, probs_gptm, u_choi, u_choi_opt),
+            or None on failure.
         - circuit_list: List of QuantumCircuits for perturbed unitaries.
         - eu_np_list: List of target unitary matrices perturbed by Hermitian operators.
         - probs_gptm: Array of mixing probabilities.
+        - u_choi: Choi representation of target unitary.
         - u_choi_opt: Optimal mixed Choi matrix.
     """
     if not isinstance(unitary, mpmath.matrix):
         unitary = mpmath.matrix(unitary)
 
-    u_gptm, _, circuit_list, eu_np_list, eu_gptm_list, eu_choi_list = (
+    u_gptm, u_choi, circuit_list, eu_np_list, eu_gptm_list, eu_choi_list = (
         process_unitary_approximation_parallel(
             unitary, num_qubits, eps, M, seed=seed, dps=dps
         )
@@ -341,7 +346,7 @@ def mixed_synthesis_parallel(
 
     probs_gptm, u_choi_opt = result
 
-    return circuit_list, eu_np_list, probs_gptm, u_choi_opt
+    return circuit_list, eu_np_list, probs_gptm, u_choi, u_choi_opt
 
 
 def mixed_synthesis_sequential(
@@ -351,7 +356,10 @@ def mixed_synthesis_sequential(
     M: int,
     seed: int = 123,
     dps: int = -1,
-) -> tuple[list[QuantumCircuit], list[np.ndarray], np.ndarray, np.ndarray] | None:
+) -> (
+    tuple[list[QuantumCircuit], list[np.ndarray], np.ndarray, np.ndarray, np.ndarray]
+    | None
+):
     """
     Compute mixed probabilities for mixed unitary synthesis (sequential version).
 
@@ -364,16 +372,18 @@ def mixed_synthesis_sequential(
         dps: Decimal precision (default: -1 for auto).
 
     Returns:
-        Tuple of (circuit_list, eu_np_list, probs_gptm, u_choi_opt), or None on failure.
+        Tuple of (circuit_list, eu_np_list, probs_gptm, u_choi, u_choi_opt),
+            or None on failure.
         - circuit_list: List of QuantumCircuits for perturbed unitaries.
         - eu_np_list: List of target unitary matrices perturbed by Hermitian operators.
         - probs_gptm: Array of mixing probabilities.
+        - u_choi: Choi representation of target unitary.
         - u_choi_opt: Optimal mixed Choi matrix.
     """
     if not isinstance(unitary, mpmath.matrix):
         unitary = mpmath.matrix(unitary)
 
-    u_gptm, _, circuit_list, eu_np_list, eu_gptm_list, eu_choi_list = (
+    u_gptm, u_choi, circuit_list, eu_np_list, eu_gptm_list, eu_choi_list = (
         process_unitary_approximation_sequential(
             unitary, num_qubits, eps, M, seed=seed, dps=dps
         )
@@ -386,4 +396,4 @@ def mixed_synthesis_sequential(
 
     probs_gptm, u_choi_opt = result
 
-    return circuit_list, eu_np_list, probs_gptm, u_choi_opt
+    return circuit_list, eu_np_list, probs_gptm, u_choi, u_choi_opt

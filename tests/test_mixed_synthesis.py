@@ -18,7 +18,7 @@ def test_mixed_synthesis_sequential_basic():
     result = mixed_synthesis_sequential(unitary, num_qubits, eps, M, seed=123)
 
     assert result is not None, "Result should not be None"
-    circuit_list, eu_np_list, probs_gptm, u_choi_opt = result
+    circuit_list, eu_np_list, probs_gptm, u_choi, u_choi_opt = result
 
     assert isinstance(circuit_list, list), "circuit_list should be a list"
     assert len(circuit_list) == M, f"circuit_list should have {M} elements"
@@ -26,6 +26,7 @@ def test_mixed_synthesis_sequential_basic():
     assert len(eu_np_list) == M, f"eu_np_list should have {M} elements"
     assert isinstance(probs_gptm, np.ndarray), "probs_gptm should be a numpy array"
     assert len(probs_gptm) == M, f"probs_gptm should have {M} elements"
+    assert isinstance(u_choi, np.ndarray), "u_choi should be a numpy array"
     assert isinstance(u_choi_opt, np.ndarray), "u_choi_opt should be a numpy array"
     assert np.allclose(np.sum(probs_gptm), 1.0), "Probabilities should sum to 1"
     assert np.all(probs_gptm >= 0), "All probabilities should be non-negative"
@@ -41,7 +42,7 @@ def test_mixed_synthesis_parallel_basic():
     result = mixed_synthesis_parallel(unitary, num_qubits, eps, M, seed=123)
 
     assert result is not None, "Result should not be None"
-    circuit_list, eu_np_list, probs_gptm, u_choi_opt = result
+    circuit_list, eu_np_list, probs_gptm, u_choi, u_choi_opt = result
 
     assert isinstance(circuit_list, list), "circuit_list should be a list"
     assert len(circuit_list) == M, f"circuit_list should have {M} elements"
@@ -49,7 +50,13 @@ def test_mixed_synthesis_parallel_basic():
     assert len(eu_np_list) == M, f"eu_np_list should have {M} elements"
     assert isinstance(probs_gptm, np.ndarray), "probs_gptm should be a numpy array"
     assert len(probs_gptm) == M, f"probs_gptm should have {M} elements"
+    assert isinstance(u_choi, np.ndarray), "u_choi should be a numpy array"
+    assert u_choi.shape == (16, 16), "Choi matrix for 2 qubits should be 16x16"
     assert isinstance(u_choi_opt, np.ndarray), "u_choi_opt should be a numpy array"
+    assert u_choi_opt.shape == (
+        16,
+        16,
+    ), "Optimal Choi matrix for 2 qubits should be 16x16"
     assert np.allclose(np.sum(probs_gptm), 1.0), "Probabilities should sum to 1"
     assert np.all(probs_gptm >= 0), "All probabilities should be non-negative"
 
@@ -69,8 +76,8 @@ def test_mixed_synthesis_sequential_deterministic():
 
     # Check that all results are identical
     for i in range(1, len(results)):
-        circuit_list1, eu_np_list1, probs_gptm1, u_choi_opt1 = results[0]
-        circuit_list2, eu_np_list2, probs_gptm2, u_choi_opt2 = results[i]
+        circuit_list1, eu_np_list1, probs_gptm1, u_choi1, u_choi_opt1 = results[0]
+        circuit_list2, eu_np_list2, probs_gptm2, u_choi2, u_choi_opt2 = results[i]
 
         assert len(circuit_list1) == len(circuit_list2)
         assert np.allclose(
@@ -96,8 +103,8 @@ def test_mixed_synthesis_parallel_deterministic():
 
     # Check that all results are identical
     for i in range(1, len(results)):
-        circuit_list1, eu_np_list1, probs_gptm1, u_choi_opt1 = results[0]
-        circuit_list2, eu_np_list2, probs_gptm2, u_choi_opt2 = results[i]
+        circuit_list1, eu_np_list1, probs_gptm1, u_choi1, u_choi_opt1 = results[0]
+        circuit_list2, eu_np_list2, probs_gptm2, u_choi2, u_choi_opt2 = results[i]
 
         assert len(circuit_list1) == len(circuit_list2)
         assert np.allclose(
@@ -118,7 +125,7 @@ def test_mixed_synthesis_sequential_one_qubit():
     result = mixed_synthesis_sequential(unitary, num_qubits, eps, M, seed=123)
 
     assert result is not None
-    circuit_list, eu_np_list, probs_gptm, u_choi_opt = result
+    circuit_list, eu_np_list, probs_gptm, u_choi, u_choi_opt = result
 
     assert len(circuit_list) == M
     assert len(eu_np_list) == M
@@ -136,7 +143,7 @@ def test_mixed_synthesis_parallel_one_qubit():
     result = mixed_synthesis_parallel(unitary, num_qubits, eps, M, seed=123)
 
     assert result is not None
-    circuit_list, eu_np_list, probs_gptm, u_choi_opt = result
+    circuit_list, eu_np_list, probs_gptm, u_choi, u_choi_opt = result
 
     assert len(circuit_list) == M
     assert len(eu_np_list) == M
@@ -155,7 +162,7 @@ def test_mixed_synthesis_sequential_with_numpy_array():
     result = mixed_synthesis_sequential(unitary_np, num_qubits, eps, M, seed=123)
 
     assert result is not None
-    circuit_list, eu_np_list, probs_gptm, u_choi_opt = result
+    circuit_list, eu_np_list, probs_gptm, u_choi, u_choi_opt = result
 
     assert len(circuit_list) == M
     assert len(probs_gptm) == M
@@ -172,7 +179,7 @@ def test_mixed_synthesis_parallel_with_numpy_array():
     result = mixed_synthesis_parallel(unitary_np, num_qubits, eps, M, seed=123)
 
     assert result is not None
-    circuit_list, eu_np_list, probs_gptm, u_choi_opt = result
+    circuit_list, eu_np_list, probs_gptm, u_choi, u_choi_opt = result
 
     assert len(circuit_list) == M
     assert len(probs_gptm) == M
