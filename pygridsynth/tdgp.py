@@ -17,7 +17,7 @@ def solve_TDGP(
     bboxA: Rectangle,
     bboxB: Rectangle,
     k: int,
-    verbose: bool = False,
+    verbose: int = 0,
     show_graph: bool = False,
 ) -> Iterator[DOmega]:
     opG_inv = opG.inv

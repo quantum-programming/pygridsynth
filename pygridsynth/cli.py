@@ -15,10 +15,11 @@ helps = {
         "allowed during the factoring process"
     ),
     "seed": "Random seed for deterministic results",
+    "verbose": "Verbosity level (0=silent, 1=basic, 2=detailed, 3=debug)",
 }
 
 
-def main() -> str:
+def main() -> None:
     parser = argparse.ArgumentParser()
 
     parser.add_argument("theta", type=str)
@@ -29,7 +30,7 @@ def main() -> str:
     parser.add_argument("--dloop", "-dl", type=int, help=helps["dl"])
     parser.add_argument("--floop", "-fl", type=int, help=helps["fl"])
     parser.add_argument("--seed", type=int, help=helps["seed"])
-    parser.add_argument("--verbose", "-v", action="store_true")
+    parser.add_argument("--verbose", "-v", type=int)
     parser.add_argument("--time", "-t", action="store_true")
     parser.add_argument("--showgraph", "-g", action="store_true")
     parser.add_argument("--up-to-phase", "-ph", action="store_true")
@@ -45,7 +46,7 @@ def main() -> str:
     if args.dloop is not None:
         cfg_args["dloop"] = args.dloop
     if args.floop is not None:
-        cfg_args["floop"] = args
+        cfg_args["floop"] = args.floop
     if args.seed is not None:
         cfg_args["seed"] = args.seed
     if args.verbose:
@@ -60,4 +61,5 @@ def main() -> str:
     cfg = GridsynthConfig(**cfg_args)
 
     gates = gridsynth_gates(theta=args.theta, epsilon=args.epsilon, cfg=cfg)
-    return gates
+
+    print(gates)

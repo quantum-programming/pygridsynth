@@ -5,15 +5,23 @@ import mpmath
 
 from .config import GridsynthConfig
 from .diophantine import Result, diophantine_dyadic
+from .domega_unitary import DOmegaUnitary
 from .grid_op import GridOp
-from .mymath import MPFConvertible, RealNum, solve_quadratic, sqrt
-from .quantum_gate import QuantumCircuit, Rz
+from .mymath import (
+    MPFConvertible,
+    RealNum,
+    convert_theta_and_epsilon,
+    dps_for_epsilon,
+    solve_quadratic,
+    sqrt,
+)
+from .quantum_circuit import QuantumCircuit
+from .quantum_gate import Rz
 from .region import ConvexSet, Ellipse, Rectangle
 from .ring import DOmega, DRootTwo, ZOmega, ZRootTwo
 from .synthesis_of_cliffordT import decompose_domega_unitary
 from .tdgp import solve_TDGP
 from .to_upright import to_upright_ellipse_pair, to_upright_set_pair
-from .unitary import DOmegaUnitary
 
 
 class EpsilonRegion(ConvexSet):
@@ -110,7 +118,7 @@ def error(
                 "Either `dps` or `epsilon` must be provided to determine precision."
             )
         else:
-            dps = _dps_for_epsilon(epsilon)
+            dps = dps_for_epsilon(epsilon)
     with mpmath.workdps(dps):
         theta = mpmath.mpf(theta)
         phase = mpmath.mpf(phase)
@@ -149,7 +157,7 @@ def get_synthesized_unitary(
                 "Either `dps` or `epsilon` must be provided to determine precision."
             )
         else:
-            dps = _dps_for_epsilon(epsilon)
+            dps = dps_for_epsilon(epsilon)
     with mpmath.workdps(dps):
         return DOmegaUnitary.from_gates(gates).to_complex_matrix
 
@@ -226,8 +234,8 @@ def _gridsynth_exact(
         tdgp_sets = (epsilon_region, unit_disk, *transformed)
 
         if cfg.measure_time:
-            print(f"to_upright_set_pair: {time.time() - start} s")
-        if cfg.verbose:
+            print(f"time of to_upright_set_pair: {(time.time() - start) * 1000} ms")
+        if cfg.verbose >= 2:
             print("------------------")
 
         u_approx = None
@@ -253,7 +261,7 @@ def _gridsynth_exact(
             print(
                 "time of diophantine_dyadic: " f"{time_of_diophantine_dyadic * 1000} ms"
             )
-        if cfg.verbose:
+        if cfg.verbose >= 2:
             print(f"{u_approx=}")
             print("------------------")
         return u_approx
@@ -290,8 +298,8 @@ def _gridsynth_up_to_phase(
         tdgp_sets1 = (epsilon_region1, unit_disk1, *transformed1)
 
         if cfg.measure_time:
-            print(f"to_upright_set_pair: {time.time() - start} s")
-        if cfg.verbose:
+            print(f"time of to_upright_set_pair: {(time.time() - start) * 1000} ms")
+        if cfg.verbose >= 2:
             print("------------------")
 
         u_approx = None
@@ -330,7 +338,7 @@ def _gridsynth_up_to_phase(
             print(
                 "time of diophantine_dyadic: " f"{time_of_diophantine_dyadic * 1000} ms"
             )
-        if cfg.verbose:
+        if cfg.verbose >= 2:
             print(f"{u_approx=}")
             print("------------------")
         return u_approx
@@ -345,41 +353,13 @@ def gridsynth(
     if cfg is None:
         cfg = GridsynthConfig(**kwargs)
     elif kwargs:
-        warnings.warn(
-            "When 'cfg' is provided, 'kwargs' are ignored.",
-            stacklevel=2,
-        )
+        warnings.warn("When 'cfg' is provided, 'kwargs' are ignored.", stacklevel=2)
 
     if cfg.dps is None:
-        cfg.dps = _dps_for_epsilon(epsilon)
-
-    if isinstance(theta, float):
-        warnings.warn(
-            (
-                f"pygridsynth is synthesizing the angle {theta}. "
-                "Please verify that this is the intended value. "
-                "Using float may introduce precision errors; "
-                "consider using mpmath.mpf for exact precision."
-            ),
-            UserWarning,
-            stacklevel=2,
-        )
-
-    if isinstance(epsilon, float):
-        warnings.warn(
-            (
-                f"pygridsynth is using epsilon={epsilon} as the tolerance. "
-                "Please verify that this is the intended value. "
-                "Using float may introduce precision errors; "
-                "consider using mpmath.mpf for exact precision."
-            ),
-            UserWarning,
-            stacklevel=2,
-        )
+        cfg.dps = dps_for_epsilon(epsilon)
 
     with mpmath.workdps(cfg.dps):
-        theta = mpmath.mpf(theta)
-        epsilon = mpmath.mpf(epsilon)
+        theta, epsilon = convert_theta_and_epsilon(theta, epsilon, dps=cfg.dps)
 
         if cfg.up_to_phase:
             return _gridsynth_up_to_phase(theta, epsilon, cfg=cfg)
@@ -397,13 +377,10 @@ def gridsynth_circuit(
     if cfg is None:
         cfg = GridsynthConfig(**kwargs)
     elif kwargs:
-        warnings.warn(
-            "When 'cfg' is provided, 'kwargs' are ignored.",
-            stacklevel=2,
-        )
+        warnings.warn("When 'cfg' is provided, 'kwargs' are ignored.", stacklevel=2)
 
     if cfg.dps is None:
-        cfg.dps = _dps_for_epsilon(epsilon)
+        cfg.dps = dps_for_epsilon(epsilon)
 
     with mpmath.workdps(cfg.dps):
         start_total = time.time() if cfg.measure_time else 0.0
@@ -419,7 +396,7 @@ def gridsynth_circuit(
             print(
                 f"time of decompose_domega_unitary: {(time.time() - start) * 1000} ms"
             )
-            print(f"total time: {(time.time() - start_total) * 1000} ms")
+            print(f"time of gridsynth_circuit: {(time.time() - start_total) * 1000} ms")
 
         return circuit
 
@@ -433,13 +410,10 @@ def gridsynth_gates(
     if cfg is None:
         cfg = GridsynthConfig(**kwargs)
     elif kwargs:
-        warnings.warn(
-            "When 'cfg' is provided, 'kwargs' are ignored.",
-            stacklevel=2,
-        )
+        warnings.warn("When 'cfg' is provided, 'kwargs' are ignored.", stacklevel=2)
 
     if cfg.dps is None:
-        cfg.dps = _dps_for_epsilon(epsilon)
+        cfg.dps = dps_for_epsilon(epsilon)
 
     with mpmath.workdps(cfg.dps):
         circuit = gridsynth_circuit(
@@ -449,9 +423,3 @@ def gridsynth_gates(
             cfg=cfg,
         )
         return circuit.to_simple_str()
-
-
-def _dps_for_epsilon(epsilon: MPFConvertible) -> int:
-    e = mpmath.mpf(epsilon)
-    k = -mpmath.log10(e)
-    return int(15 + 2.5 * int(mpmath.ceil(k)))  # used in newsynth

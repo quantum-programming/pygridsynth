@@ -1,2 +1,5 @@
-mpmath
+mpmath>=1.3
 numpy
+scipy
+cvxpy
+numba

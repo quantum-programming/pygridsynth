@@ -24,11 +24,11 @@ def _shift_ellipse_pair(ellipse_pair: EllipsePair, n: int) -> EllipsePair:
 
 
 def _step_lemma(
-    ellipse_pair: EllipsePair, opG_l: GridOp, opG_r: GridOp, verbose: bool = False
+    ellipse_pair: EllipsePair, opG_l: GridOp, opG_r: GridOp, verbose: int = 0
 ) -> tuple[EllipsePair, GridOp, GridOp, bool]:
     A = ellipse_pair.A
     B = ellipse_pair.B
-    if verbose:
+    if verbose >= 3:
         print("-----")
         print(f"skew: {ellipse_pair.skew}, bias: {ellipse_pair.bias}")
         print(
@@ -40,19 +40,19 @@ def _step_lemma(
         )
         print("-----")
     if B.b < 0:
-        if verbose:
+        if verbose >= 3:
             print("Z")
         OP_Z = GridOp(ZOmega(0, 0, 0, 1), ZOmega(0, -1, 0, 0))
         return _reduction(ellipse_pair, opG_l, opG_r, OP_Z)
     elif A.bias * B.bias < 1:
-        if verbose:
+        if verbose >= 3:
             print("X")
         OP_X = GridOp(ZOmega(0, 1, 0, 0), ZOmega(0, 0, 0, 1))
         return _reduction(ellipse_pair, opG_l, opG_r, OP_X)
     elif ellipse_pair.bias > 33.971 or ellipse_pair.bias < 0.029437:
         n = round(log(ellipse_pair.bias) / log(LAMBDA.to_real) / 8)
         OP_S = GridOp(ZOmega(-1, 0, 1, 1), ZOmega(1, -1, 1, 0))
-        if verbose:
+        if verbose >= 3:
             print(f"S ({n=})")
         return _reduction(ellipse_pair, opG_l, opG_r, OP_S**n)
     elif ellipse_pair.skew <= 15:
@@ -60,7 +60,7 @@ def _step_lemma(
     elif ellipse_pair.bias > 5.8285 or ellipse_pair.bias < 0.17157:
         n = round(log(ellipse_pair.bias) / log(LAMBDA.to_real) / 4)
         ellipse_pair = _shift_ellipse_pair(ellipse_pair, n)
-        if verbose:
+        if verbose >= 3:
             print(f"sigma ({n=})")
         if n >= 0:
             OP_SIGMA_L = GridOp(ZOmega(-1, 0, 1, 1), ZOmega(0, 1, 0, 0)) ** n
@@ -70,36 +70,36 @@ def _step_lemma(
             OP_SIGMA_R = GridOp(ZOmega(0, 0, 0, 1), ZOmega(1, 1, 1, 0)) ** (-n)
         return ellipse_pair, opG_l * OP_SIGMA_L, OP_SIGMA_R * opG_r, False
     elif 0.24410 <= A.bias <= 4.0968 and 0.24410 <= B.bias <= 4.0968:
-        if verbose:
+        if verbose >= 3:
             print("R")
         OP_R = GridOp(ZOmega(0, 0, 1, 0), ZOmega(1, 0, 0, 0))
         return _reduction(ellipse_pair, opG_l, opG_r, OP_R)
     elif A.b >= 0 and A.bias <= 1.6969:
-        if verbose:
+        if verbose >= 3:
             print("K")
         OP_K = GridOp(ZOmega(-1, -1, 0, 0), ZOmega(0, -1, 1, 0))
         return _reduction(ellipse_pair, opG_l, opG_r, OP_K)
     elif A.b >= 0 and B.bias <= 1.6969:
-        if verbose:
+        if verbose >= 3:
             print("K_conj_sq2")
         OP_K_conj_sq2 = GridOp(ZOmega(1, -1, 0, 0), ZOmega(0, -1, -1, 0))
         return _reduction(ellipse_pair, opG_l, opG_r, OP_K_conj_sq2)
     elif A.b >= 0:
         n = max(1, floorsqrt(min(A.bias, B.bias) / 4))
-        if verbose:
+        if verbose >= 3:
             print(f"A ({n=})")
         OP_A_n = GridOp(ZOmega(0, 0, 0, 1), ZOmega(0, 1, 0, 2 * n))
         return _reduction(ellipse_pair, opG_l, opG_r, OP_A_n)
     else:
         n = max(1, floorsqrt(min(A.bias, B.bias) / 2))
-        if verbose:
+        if verbose >= 3:
             print(f"B ({n=})")
         OP_B_n = GridOp(ZOmega(0, 0, 0, 1), ZOmega(n, 1, -n, 0))
         return _reduction(ellipse_pair, opG_l, opG_r, OP_B_n)
 
 
 def to_upright_ellipse_pair(
-    ellipseA: Ellipse, ellipseB: Ellipse, verbose: bool = False
+    ellipseA: Ellipse, ellipseB: Ellipse, verbose: int = 0
 ) -> GridOp:
     ellipseA_normalized = ellipseA.normalize()
     ellipseB_normalized = ellipseB.normalize()
@@ -120,7 +120,7 @@ def to_upright_set_pair(
     setB: ConvexSet,
     opG: GridOp | None = None,
     show_graph: bool = False,
-    verbose: bool = False,
+    verbose: int = 0,
 ) -> tuple[GridOp, Ellipse, Ellipse, Rectangle, Rectangle]:
     if opG is None:
         opG = to_upright_ellipse_pair(setA.ellipse, setB.ellipse, verbose=verbose)
@@ -131,7 +131,7 @@ def to_upright_set_pair(
     bboxB = ellipseB_upright.bbox()
     upA = ellipseA_upright.area / bboxA.area
     upB = ellipseB_upright.area / bboxB.area
-    if verbose:
+    if verbose >= 2:
         print(f"{upA=}, {upB=}")
     if show_graph:
         plot_sol([], ellipseA_upright, ellipseB_upright, bboxA, bboxB)

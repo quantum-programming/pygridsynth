@@ -16,10 +16,11 @@ repos:
         args:
           # compatibility with black
           # E203 whitespace before ':'
+          # E704 multiple statements on one line (def)
           # E741 ambiguous variable name 'I'
           # W503 line break before binary operator
           - "--max-line-length=88"
-          - "--ignore=E203, E741, W503"
+          - "--ignore=E203, E704, E741, W503"
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: 'v1.15.0'
     hooks:
@@ -31,7 +32,8 @@ repos:
         name: pytest
         entry: bash -c 'PYTHONPATH=./ .venv/bin/pytest tests'
         language: system
-        types: [python]
+        pass_filenames: false
+        always_run: true
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
