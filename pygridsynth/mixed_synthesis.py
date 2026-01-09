@@ -13,7 +13,6 @@ import numpy as np
 import scipy
 
 from .mixed_synthesis_utils import (
-    _diamond_norm_choi,
     get_random_hermitian_operator,
     unitary_to_choi,
     unitary_to_gptm,
@@ -161,23 +160,6 @@ def compute_optimal_mixing_probabilities(
         u_choi_opt = np.einsum("i,ijk->jk", probs_gptm, eu_choi_list)
 
     return probs_gptm, u_choi_opt
-
-
-def compute_diamond_norm_error(
-    u_choi: np.ndarray, u_choi_opt: np.ndarray, eps: float
-) -> float:
-    """
-    Compute error using diamond norm.
-
-    Args:
-        u_choi: Choi representation of target unitary.
-        u_choi_opt: Choi representation of mixed unitary.
-        eps: Error tolerance parameter.
-
-    Returns:
-        Diamond norm error between the target and mixed unitaries.
-    """
-    return _diamond_norm_choi(u_choi, u_choi_opt, scale=1e-2 / eps**2)
 
 
 def process_unitary_approximation_parallel(

@@ -13,11 +13,10 @@ import cvxpy as cp
 import numpy as np
 
 from .mixed_synthesis import (
-    compute_diamond_norm_error,
     compute_optimal_mixing_probabilities,
     process_unitary_approximation_parallel,
 )
-from .mymath import random_su
+from .mymath import diamond_norm_error_from_choi, random_su
 
 if TYPE_CHECKING:
     from .quantum_circuit import QuantumCircuit
@@ -57,7 +56,7 @@ def my_task(
     if result is None:
         return (idx, None, None)
     probs_gptm, u_choi_opt = result
-    error = compute_diamond_norm_error(u_choi, u_choi_opt, eps)
+    error = diamond_norm_error_from_choi(u_choi, u_choi_opt, eps, mixed_synthesis=True)
     return (idx, probs_gptm, error)
 
 

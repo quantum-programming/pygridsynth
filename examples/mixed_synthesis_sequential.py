@@ -1,8 +1,5 @@
-from pygridsynth.mixed_synthesis import (
-    compute_diamond_norm_error,
-    mixed_synthesis_sequential,
-)
-from pygridsynth.mymath import random_su
+from pygridsynth.mixed_synthesis import mixed_synthesis_sequential
+from pygridsynth.mymath import diamond_norm_error_from_choi, random_su
 
 # Generate a random SU(2^n) unitary matrix
 num_qubits = 2
@@ -20,5 +17,5 @@ if result is not None:
     circuit_list, eu_np_list, probs_gptm, u_choi, u_choi_opt = result
     print(f"Number of circuits: {len(circuit_list)}")
     print(f"Mixing probabilities: {probs_gptm}")
-    error = compute_diamond_norm_error(u_choi, u_choi_opt, eps)
+    error = diamond_norm_error_from_choi(u_choi, u_choi_opt, eps, mixed_synthesis=True)
     print(f"error: {error}")

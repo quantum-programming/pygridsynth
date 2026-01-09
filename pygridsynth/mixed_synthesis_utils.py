@@ -426,7 +426,7 @@ def choi_to_unitary(choi: np.ndarray, tol: float = 1e-12) -> np.ndarray:
     return u_ret
 
 
-def _diamond_norm_choi(
+def diamond_norm_choi(
     choi1: np.ndarray,
     choi2: np.ndarray | None = None,
     scale: float = 1,

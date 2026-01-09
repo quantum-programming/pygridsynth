@@ -5,6 +5,8 @@ from typing import TypeAlias
 import mpmath
 import numpy as np
 
+from .mixed_synthesis_utils import diamond_norm_choi, unitary_to_choi
+
 RealNum: TypeAlias = int | float | mpmath.mpf
 MPFConvertible: TypeAlias = RealNum | mpmath.mpf
 
@@ -143,6 +145,14 @@ def solve_quadratic(
             return ((2 * c) / s2, (2 * c) / s1)
 
 
+def mpmath_matrix_to_numpy(M: mpmath.matrix) -> np.ndarray:
+    return np.array(M.tolist(), dtype=complex)
+
+
+def numpy_matrix_to_mpmath(M: np.ndarray) -> mpmath.matrix:
+    return mpmath.matrix(M.tolist())
+
+
 def trace(M: mpmath.matrix) -> mpmath.mpf:
     return sum(M[i, i] for i in range(min(M.rows, M.cols)))
 
@@ -186,3 +196,52 @@ def random_su(n: int) -> mpmath.matrix:
     q, _ = mpmath.qr(z)
     q /= mpmath.det(q) ** (1 / dim)
     return q
+
+
+def diamond_norm_error(
+    u: np.ndarray | mpmath.matrix,
+    u_opt: np.ndarray | mpmath.matrix,
+    eps: MPFConvertible,
+) -> float:
+    """
+    Compute error using diamond norm.
+
+    Args:
+        u: Target unitary.
+        u_opt: Mixed unitary.
+        eps: Error tolerance parameter.
+
+    Returns:
+        Diamond norm error between the target and mixed unitaries.
+    """
+    if isinstance(u, mpmath.matrix):
+        u = mpmath_matrix_to_numpy(u)
+    if isinstance(u_opt, mpmath.matrix):
+        u_opt = mpmath_matrix_to_numpy(u_opt)
+    if isinstance(eps, mpmath.mpf):
+        eps = float(eps)
+    u_choi = unitary_to_choi(u)
+    u_choi_opt = unitary_to_choi(u_opt)
+    return diamond_norm_error_from_choi(u_choi, u_choi_opt, eps, mixed_synthesis=False)
+
+
+def diamond_norm_error_from_choi(
+    u_choi: np.ndarray,
+    u_choi_opt: np.ndarray,
+    eps: float,
+    mixed_synthesis: bool = False,
+) -> float:
+    """
+    Compute error using diamond norm.
+
+    Args:
+        u_choi: Choi representation of target unitary.
+        u_choi_opt: Choi representation of mixed unitary.
+        eps: Error tolerance parameter.
+        mixed_synthesis: Whether the error is for mixed synthesis.
+
+    Returns:
+        Diamond norm error between the target and mixed unitaries.
+    """
+    scale = 1e-2 / eps**2 if mixed_synthesis else 1e-2 / eps
+    return diamond_norm_choi(u_choi, u_choi_opt, scale=scale)
