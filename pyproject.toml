@@ -1,6 +1,6 @@
 [project]
 name = "pygridsynth"
-version = "1.2.0"
+version = "2.0.0"
 authors = [{ name="Shuntaro Yamamoto", email="shun0923@g.ecc.u-tokyo.ac.jp" }, { name="Nobuyuki Yoshioka", email="nyoshioka@g.ecc.u-tokyo.ac.jp" }]
 description = "Python version gridsynth program computes approximations of Z-rotations over the Clifford+T gate set"
 readme = "README.md"
