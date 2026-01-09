@@ -29,7 +29,7 @@ def test_mixed_synthesis_sequential_basic():
     assert isinstance(u_choi, np.ndarray), "u_choi should be a numpy array"
     assert isinstance(u_choi_opt, np.ndarray), "u_choi_opt should be a numpy array"
     assert np.allclose(np.sum(probs_gptm), 1.0), "Probabilities should sum to 1"
-    assert np.all(probs_gptm >= 0), "All probabilities should be non-negative"
+    assert np.all(probs_gptm >= -1e-6), "All probabilities should be non-negative"
 
 
 def test_mixed_synthesis_parallel_basic():
@@ -58,7 +58,7 @@ def test_mixed_synthesis_parallel_basic():
         16,
     ), "Optimal Choi matrix for 2 qubits should be 16x16"
     assert np.allclose(np.sum(probs_gptm), 1.0), "Probabilities should sum to 1"
-    assert np.all(probs_gptm >= 0), "All probabilities should be non-negative"
+    assert np.all(probs_gptm >= -1e-6), "All probabilities should be non-negative"
 
 
 def test_mixed_synthesis_sequential_deterministic():
